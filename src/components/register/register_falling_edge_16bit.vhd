@@ -18,18 +18,18 @@ use ieee.std_logic_1164.all;
 
 --| Register |---------------------------------------------------------------------------
 
-entity register_se_falling_16bit is
+entity register_falling_edge_16bit is
     port (
         data_in   : in  std_logic_vector(15 downto 0);  -- Dados de entrada
         MR        : in  std_logic;                      -- Sinal de master-reset
         CLK       : in  std_logic;                      -- Sinal de clock
         data_out  : out std_logic_vector(15 downto 0)   -- Dados de saída
     );
-end entity register_se_falling_16bit;
+end entity register_falling_edge_16bit;
 
 --| Lógica |------------------------------------------------------------------------------
 
-architecture main of register_se_falling_16bit is
+architecture main of register_falling_edge_16bit is
 begin
 
     process (CLK, MR)

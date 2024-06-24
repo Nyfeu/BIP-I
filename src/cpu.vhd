@@ -104,7 +104,7 @@ architecture main of cpu is
 
         -- Registrador de 16 bits detector de borda de descida:
 
-        component register_sync_falling_16bit is
+        component register_falling_edge_enable_16bit is
             port (
                 data_in   : in  std_logic_vector(15 downto 0);         -- Dados de entrada
                 enable    : in  std_logic;                             -- Sinal de habilitação
@@ -112,11 +112,11 @@ architecture main of cpu is
                 CLK       : in  std_logic;                             -- Sinal de clock
                 data_out  : out std_logic_vector(15 downto 0)          -- Dados de saída
             );
-        end component register_sync_falling_16bit;
+        end component register_falling_edge_enable_16bit;
 
         -- Registrador de 16 bits detector de borda de descida:
 
-        component register_sync_rising_16bit is
+        component register_rising_edge_enable_16bit is
             port (
                 data_in   : in  std_logic_vector(15 downto 0);         -- Dados de entrada
                 enable    : in  std_logic;                             -- Sinal de habilitação
@@ -124,18 +124,18 @@ architecture main of cpu is
                 CLK       : in  std_logic;                             -- Sinal de clock
                 data_out  : out std_logic_vector(15 downto 0)          -- Dados de saída
             );
-        end component register_sync_rising_16bit;
+        end component register_rising_edge_enable_16bit;
 
         -- Registrador de 16 bits detector de borda de descida sem porta enable:
 
-        component register_se_falling_16bit is
+        component register_falling_edge_16bit is
             port (
                 data_in   : in  std_logic_vector(15 downto 0);         -- Dados de entrada
                 MR        : in  std_logic;                             -- Sinal de master-reset
                 CLK       : in  std_logic;                             -- Sinal de clock
                 data_out  : out std_logic_vector(15 downto 0)          -- Dados de saída
             );
-        end component register_se_falling_16bit;
+        end component register_falling_edge_16bit;
 
         -- Decodificador de instruções
 
@@ -238,7 +238,7 @@ begin
 
     -- Instância de um registrador: IR (Instruction Register)
 
-    IR: register_se_falling_16bit
+    IR: register_falling_edge_16bit
         port map(
             inst_data,                       -- Recebe instrução a partir do sinal da memória de programa
             MR,                              -- Master Reset ativo em LOW para o registrador
@@ -276,7 +276,7 @@ begin
 
     -- Instância de um registrador: ACC (Acumulador)
 
-    ACC: register_sync_rising_16bit
+    ACC: register_rising_edge_enable_16bit
         port map(
             acc_in,                          -- Recebe instrução a partir do sinal da memória de programa
             WR_ACC,                          -- Habilita a escrita no Instruction Register (IR)

@@ -18,7 +18,7 @@ use ieee.std_logic_1164.all;
 
 --| Register |---------------------------------------------------------------------------
 
-entity register_sync_rising_16bit is
+entity register_rising_edge_enable_16bit is
     port (
         data_in   : in  std_logic_vector(15 downto 0);  -- Dados de entrada
         enable    : in  std_logic;                      -- Sinal de habilitação
@@ -26,11 +26,11 @@ entity register_sync_rising_16bit is
         CLK       : in  std_logic;                      -- Sinal de clock
         data_out  : out std_logic_vector(15 downto 0)   -- Dados de saída
     );
-end entity register_sync_rising_16bit;
+end entity register_rising_edge_enable_16bit;
 
 --| Lógica |------------------------------------------------------------------------------
 
-architecture main of register_sync_rising_16bit is
+architecture main of register_rising_edge_enable_16bit is
 begin
 
     process (CLK, MR)

@@ -22,7 +22,7 @@ entity cpu is
         enable_clk  : in  std_logic;                           -- Habilita pulsos de clock
         MR          : in  std_logic;                           -- Master-Reset (ativo em LOW)
         pc_count    : out std_logic_vector(n-1 downto 0);      -- Program Counter (PC)
-        d_out       : out std_logic;                           -- Sinal de controle
+        d_out       : out std_logic_vector(n-1 downto 0);      -- Valor do ACC
         op_out      : out std_logic_vector(3 downto 0)         -- Código de operação
     );
 
@@ -143,7 +143,7 @@ architecture main of cpu is
             ); 
         end component generic_ram;
 
-        -- MUX 2 selects e 16 bits
+        -- MUX 2 selects e 16 bits:
 
         component mux_2_16bit is
             port (
@@ -157,7 +157,7 @@ architecture main of cpu is
             );
         end component mux_2_16bit;
 
-          -- MUX 1 select e 16 bits
+        -- MUX 1 select e 16 bits:
 
         component mux_16bit is
             port (
@@ -167,6 +167,16 @@ architecture main of cpu is
                 data_out    : out std_logic_vector(15 downto 0)   -- Dados de saída
             );
         end component mux_16bit;
+
+        -- Unidade Lógica e Aritmética (ALU):
+
+        component arithmetic_logic_unit is
+            port (
+                data_in_1, data_in_2   : in  std_logic_vector(15 downto 0);  -- Dados de entrada
+                op_ula                 : in  std_logic;                      -- Sinal de operação
+                data_out               : out std_logic_vector(15 downto 0)   -- Dados de saída
+            );
+          end component arithmetic_logic_unit;
 
 begin
 
@@ -224,8 +234,6 @@ begin
         op_code, SelUlaSrc, WR_RAM, WR_PC, WR_ACC, SelAccSrc1, SelAccSrc0, OP_ULA
     );
 
-    d_out <= SelAccSrc0;
-
     -- Instância da memória de dados: RAM
 
     RAM: generic_ram 
@@ -269,11 +277,22 @@ begin
             ram_data,                        -- Dados de entrada 1
             operand_ex,                      -- Dados de entrada 2
             SelUlaSrc,                       -- Sinal de seleção
+            alu_src                          -- Dados de saída
+        );
+
+    -- ALU - Unidade Lógica e Aritmética:
+
+    ALU: arithmetic_logic_unit 
+        port map(
+            acc_out,                         -- Recebe dado do acumulador
+            alu_src,                         -- Recebe dado do MUX_ALU
+            OP_ULA,                          -- Sinal de operação
             alu_out                          -- Dados de saída
         );
 
-    -- ALU:
+    -- Jogando valor do ACC para a saída:
 
+    d_out <= acc_out;
 
 end architecture main;
 

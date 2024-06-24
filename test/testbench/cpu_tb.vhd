@@ -64,10 +64,6 @@ begin
         MR <= '0';
         wait for 1 ns;
         MR <= '1';
-        wait for 7 ns;
-        MR <= '0';
-        wait for 1 ns;
-        MR <= '1';
         wait for 30 ns;
         enable_clk <= '0';
 

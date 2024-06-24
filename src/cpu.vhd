@@ -286,7 +286,7 @@ begin
         port map(
             acc_out,                         -- Recebe dado do acumulador
             alu_src,                         -- Recebe dado do MUX_ALU
-            OP_ULA,                          -- Sinal de operação
+            not(OP_ULA),                          -- Sinal de operação
             alu_out                          -- Dados de saída
         );
 

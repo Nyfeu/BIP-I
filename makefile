@@ -13,7 +13,7 @@ GTKWAVE = gtkwave
 RM = del
 
 # Run a testbench
-$(WAVEFORM): $(VHDL_FILES)
+$(WAVEFORM): $(VHDL_FILES) $(VHDL_CPU)
 	$(GHDL) -a --std=08 $(VHDL_CPU)
 	$(GHDL) -a --std=08 $(VHDL_FILES)
 	$(GHDL) -a --std=08 $(TESTBENCH_FILE)

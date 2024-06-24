@@ -1,5 +1,5 @@
 
--- Descrição de Hardware (VHDL) de uma porta AND de duas entradas
+-- Descrição de Hardware (VHDL) de um decodificador de instruções
 --
 --                          _____				
 --                         |     |
@@ -10,38 +10,40 @@
 -- AUTOR: André Solano F. R. Maiolini
 -- DATA: 21/06/2024
 
---| Libraries |-------------------------------------------------------
+--| Libraries |------------------------------------------------------------------------------
 
 library ieee;
 use ieee.std_logic_1164.all;
 
---| AND gate |---------------------------------------------------------
+--| AND gate |-------------------------------------------------------------------------------
 
 -- Definindo uma entidade para o AND gate
 
 entity decoder is
   
   port (
-    op_code       : in  std_logic_vector(3 downto 0);
-    clk           : in  std_logic;
-    sel_ula_src   : out std_logic;
-    WR_RAM        : out std_logic;
-    WR_PC         : out std_logic;
-    WR_ACC        : out std_logic;
-    sel_acc_src_1 : out std_logic;
-    sel_acc_src_0 : out std_logic;
-    op_ula        : out std_logic;
-    WR_IR         : out std_logic
+    op_code       : in  std_logic_vector(3 downto 0);  -- Lê o código da operação em exec
+    clk           : in  std_logic;                     -- Recebe o clock interno da CPU
+    sel_ula_src   : out std_logic;                     -- Seleciona operando para a ULA
+    WR_RAM        : out std_logic;                     -- Sinal de escrita na RAM
+    WR_PC         : out std_logic;                     -- Sinal de incremento do PC
+    WR_ACC        : out std_logic;                     -- Sinal de escrita no ACC
+    sel_acc_src_1 : out std_logic;                     -- Seleção do input do ACC (MSB)
+    sel_acc_src_0 : out std_logic;                     -- Seleção do input do ACC (LSB)
+    op_ula        : out std_logic;                     -- Seleciona operação da ULA
+    WR_IR         : out std_logic                      -- Sinal de escrita no IR
   );
 
 end decoder;
 
---| Architecture |-----------------------------------------------------
+--| Architecture |---------------------------------------------------------------------------
 
 -- Definindo a lógica do AND gate
 
 architecture main of decoder is
 
+  -- Sinais internos para a lógica combinacional:
+  
   signal u, v, w, x, y : std_logic;
 
 begin
@@ -77,4 +79,4 @@ begin
 
 end architecture main;
 
----------------------------------------------------------------------
+-------------------------------------------------------------------------------------------

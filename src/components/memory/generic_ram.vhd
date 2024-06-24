@@ -3,7 +3,7 @@
 --                    _________
 --        data_in >--|         |
 --           addr >--|   RAM   |--> data_out
---       ME (LOW) >--|         |
+--             ME >--|         |
 --             OE >--|         |
 --             WE >--|_________|
 --                
@@ -26,8 +26,8 @@ use ieee.numeric_std.all;
 entity generic_ram is
 
     generic(
-        n    : integer := 8;    -- Quantidade de bits de endereçamento
-        word : integer := 16    -- Tamanho da palavra de memória
+        n    : integer := 8;                                 -- Quantidade de bits de endereçamento
+        word : integer := 16                                 -- Tamanho da palavra de memória
     );
 
     port (

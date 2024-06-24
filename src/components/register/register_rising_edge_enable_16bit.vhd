@@ -1,16 +1,17 @@
--- Descrição de Hardware (VHDL) de um Registrador Síncrono 16 bits c/ CLEAR e PRESET
+-- Descrição de Hardware (VHDL) de um Registrador Síncrono 16 bits c/ Master-Reset
+--
+-- ->> Detector de bordas de subida
+-- ->> Com sinal 'enable' para habilitação
 --
 --                  __________
---      not(PR) >--|          |
---      not(CL) >--| register |-->      Q (16 bits)
---      data_in >--|  16 bits |--> not(Q) (16 bits)
---       enable >--|          |
---          CLK >--|__________|
+--           MR >--|          |
+--          CLK >--| register |--> data_out (16 bits)
+--       enable >--|  16 bits |
+--      data_in >--|__________|
 --
 --
 -- AUTOR: André Solano F. R. Maiolini
 -- DATA: 23/06/2024
-
 --| Libraries |--------------------------------------------------------------------------
 
 library ieee;

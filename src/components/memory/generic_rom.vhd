@@ -41,6 +41,9 @@ end entity generic_rom;
 architecture main of generic_rom is
 
     type memory_type is array (0 to 2**n - 1) of std_logic_vector(word-1 downto 0);
+
+    -- Gravação do código a ser executado pela CPU:
+
     constant memory : memory_type := (
         0 => x"3000",
         1 => x"1000",

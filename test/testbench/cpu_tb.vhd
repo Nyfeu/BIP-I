@@ -26,7 +26,7 @@ architecture teste of cpu_tb is
   signal enable_clk : std_logic := '1';                       -- Enable (ativo em HIGH)
   signal MR         : std_logic;                              -- Master-Reset (ativo em LOW)
   signal pc_count   : std_logic_vector(n-1 downto 0);         -- Program Count
-  signal d_out      : std_logic_vector(i_word-1 downto 0);    -- Instrução lida do IR
+  signal d_out      : std_logic;                              -- Sinal de controle
   signal op_out     : std_logic_vector(3 downto 0);           -- Código de operação
 
   -- Declaração do componente CPU:
@@ -44,7 +44,7 @@ architecture teste of cpu_tb is
         enable_clk  : in  std_logic;                           -- Habilita pulsos de clock
         MR          : in  std_logic;                           -- Master-Reset (ativo em LOW)
         pc_count    : out std_logic_vector(n-1 downto 0);      -- Program Count
-        d_out       : out std_logic_vector(i_word-1 downto 0); -- Leitura do IR
+        d_out       : out std_logic;                           -- Sinal de controle
         op_out      : out std_logic_vector(3 downto 0)         -- Código de operação
     );
 

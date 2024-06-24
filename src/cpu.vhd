@@ -22,7 +22,7 @@ entity cpu is
         enable_clk  : in  std_logic;                           -- Habilita pulsos de clock
         MR          : in  std_logic;                           -- Master-Reset (ativo em LOW)
         pc_count    : out std_logic_vector(n-1 downto 0);      -- Program Counter (PC)
-        d_out       : out std_logic_vector(i_word-1 downto 0); -- Leitura do IR
+        d_out       : out std_logic;                           -- Sinal de controle
         op_out      : out std_logic_vector(3 downto 0)         -- Código de operação
     );
 
@@ -36,11 +36,21 @@ architecture main of cpu is
 
     signal internal_clk : std_logic;                            -- Clock interno da CPU (recebe o clock do TIMER)
     signal inst_data    : std_logic_vector(i_word-1 downto 0);  -- Define a instrução que será carregada no IR
-    signal WR_IR        : std_logic := '1';                     -- Sinal de controle WR_IR
     signal instruction  : std_logic_vector(i_word-1 downto 0);  -- Instrução lida da saída do IR
     signal op_code      : std_logic_vector(3 downto 0);         -- Código de operação
     signal operand      : std_logic_vector(11 downto 0);        -- Operando 12 bits
     signal operand_ex   : std_logic_vector(15 downto 0);        -- Operando extendido (16 bits)
+
+    -- Definindo sinais de controle:
+
+    signal SelUlaSrc    : std_logic;                            -- Sinal de seleção da fonte para a ALU
+    signal OP_ULA       : std_logic;                            -- Sinal de seleção de operação da ALU
+    signal WR_RAM       : std_logic;                            -- Sinal de escrita na memória de dados (RAM)
+    signal WR_PC        : std_logic;                            -- Sinal de incremento do PC (modificar)
+    signal WR_IR        : std_logic := '1';                     -- Sinal de controle WR_IR
+    signal WR_ACC       : std_logic;                            -- Sinal de escrita no acumulador (ACC)
+    signal SelAccSrc1   : std_logic;                            -- Seleciona dados para o ACC (MSB)
+    signal SelACCSrc0   : std_logic;                            -- Seleciona dados para o ACC (LSB)
 
     -- Definindo os componentes internos da CPU:
 
@@ -88,13 +98,28 @@ architecture main of cpu is
 
         component register_sync_16bit is
             port (
-                data_in   : in  std_logic_vector(15 downto 0);  -- Dados de entrada
-                enable    : in  std_logic;                      -- Sinal de habilitação
-                MR        : in  std_logic;                      -- Sinal de master-reset
-                CLK       : in  std_logic;                      -- Sinal de clock
-                data_out  : out std_logic_vector(15 downto 0)   -- Dados de saída
+                data_in   : in  std_logic_vector(15 downto 0);         -- Dados de entrada
+                enable    : in  std_logic;                             -- Sinal de habilitação
+                MR        : in  std_logic;                             -- Sinal de master-reset
+                CLK       : in  std_logic;                             -- Sinal de clock
+                data_out  : out std_logic_vector(15 downto 0)          -- Dados de saída
             );
         end component register_sync_16bit;
+
+        -- Decodificador de instruções
+
+        component decoder is
+            port (
+                op_code       : in  std_logic_vector(3 downto 0);      -- Entrada do código de operação
+                sel_ula_src   : out std_logic;                         -- Restante dos sinais de controle
+                WR_RAM        : out std_logic;
+                WR_PC         : out std_logic;
+                WR_ACC        : out std_logic;
+                sel_acc_src_1 : out std_logic;
+                sel_acc_src_0 : out std_logic;
+                op_ula        : out std_logic
+            );
+        end component decoder;
 
 begin
 
@@ -144,8 +169,15 @@ begin
     -- Extensão de sinal do operando:
 
     operand_ex <= x"0" & operand;
-    d_out <= operand_ex;   
     op_out <= op_code; 
+
+    -- Instanciando o decodificador de instruções:
+
+    DECR: decoder port map(
+        op_code, SelUlaSrc, WR_RAM, WR_PC, WR_ACC, SelAccSrc1, SelAccSrc0, OP_ULA
+    );
+
+    d_out <= SelAccSrc0;
 
 end architecture main;
 

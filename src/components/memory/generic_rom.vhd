@@ -42,10 +42,14 @@ architecture main of generic_rom is
 
     type memory_type is array (0 to 2**n - 1) of std_logic_vector(word-1 downto 0);
     constant memory : memory_type := (
-        0 => x"AAAA",
-        1 => x"BBBB",
-        2 => x"CCCC",
-        3 => x"DDDD",
+        0 => x"0000",
+        1 => x"1000",
+        2 => x"2000",
+        3 => x"3000",
+        4 => x"4000",
+        5 => x"5000",
+        6 => x"6000",
+        7 => x"7000",
         others => x"0000"
     );
 

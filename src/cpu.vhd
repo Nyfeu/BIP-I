@@ -34,23 +34,28 @@ architecture main of cpu is
 
     -- Definindo sinais internos à CPU:
 
-    signal internal_clk : std_logic;                            -- Clock interno da CPU (recebe o clock do TIMER)
-    signal inst_data    : std_logic_vector(i_word-1 downto 0);  -- Define a instrução que será carregada no IR
-    signal instruction  : std_logic_vector(i_word-1 downto 0);  -- Instrução lida da saída do IR
-    signal op_code      : std_logic_vector(3 downto 0);         -- Código de operação
-    signal operand      : std_logic_vector(11 downto 0);        -- Operando 12 bits
-    signal operand_ex   : std_logic_vector(15 downto 0);        -- Operando extendido (16 bits)
+    signal internal_clk : std_logic;                                  -- Clock interno da CPU (recebe o clock do TIMER)
+    signal inst_data    : std_logic_vector(i_word-1 downto 0);        -- Define a instrução que será carregada no IR
+    signal instruction  : std_logic_vector(i_word-1 downto 0);        -- Instrução lida da saída do IR
+    signal op_code      : std_logic_vector(3 downto 0);               -- Código de operação
+    signal operand      : std_logic_vector(11 downto 0);              -- Operando 12 bits
+    signal operand_ex   : std_logic_vector(15 downto 0);              -- Operando extendido (16 bits)
+    signal acc_in       : std_logic_vector(15 downto 0);              -- Valor da entrada do acumulador
+    signal acc_out      : std_logic_vector(15 downto 0);              -- Valor da saída do acumulador
+    signal ram_data     : std_logic_vector(15 downto 0);              -- Valor lido da RAM
+    signal alu_out      : std_logic_vector(15 downto 0);              -- Resultado lido da ALU
+    signal alu_src      : std_logic_vector(15 downto 0);              -- Entrada da ALU
 
     -- Definindo sinais de controle:
 
-    signal SelUlaSrc    : std_logic;                            -- Sinal de seleção da fonte para a ALU
-    signal OP_ULA       : std_logic;                            -- Sinal de seleção de operação da ALU
-    signal WR_RAM       : std_logic;                            -- Sinal de escrita na memória de dados (RAM)
-    signal WR_PC        : std_logic;                            -- Sinal de incremento do PC (modificar)
-    signal WR_IR        : std_logic := '1';                     -- Sinal de controle WR_IR
-    signal WR_ACC       : std_logic;                            -- Sinal de escrita no acumulador (ACC)
-    signal SelAccSrc1   : std_logic;                            -- Seleciona dados para o ACC (MSB)
-    signal SelACCSrc0   : std_logic;                            -- Seleciona dados para o ACC (LSB)
+    signal SelUlaSrc    : std_logic;                                  -- Sinal de seleção da fonte para a ALU
+    signal OP_ULA       : std_logic;                                  -- Sinal de seleção de operação da ALU
+    signal WR_RAM       : std_logic;                                  -- Sinal de escrita na memória de dados (RAM)
+    signal WR_PC        : std_logic;                                  -- Sinal de incremento do PC (modificar)
+    signal WR_IR        : std_logic := '1';                           -- Sinal de controle WR_IR
+    signal WR_ACC       : std_logic;                                  -- Sinal de escrita no acumulador (ACC)
+    signal SelAccSrc1   : std_logic;                                  -- Seleciona dados para o ACC (MSB)
+    signal SelACCSrc0   : std_logic;                                  -- Seleciona dados para o ACC (LSB)
 
     -- Definindo os componentes internos da CPU:
 
@@ -121,6 +126,48 @@ architecture main of cpu is
             );
         end component decoder;
 
+        -- Random Access Memory:
+
+        component generic_ram is
+            generic(
+                n    : integer := 12;    -- Quantidade de bits de endereçamento
+                word : integer := 16     -- Tamanho da palavra de memória
+            );
+            port (
+                we      : in  std_logic;                             -- Habilita escrita (ativo em LOW)
+                oe      : in  std_logic;                             -- Habilita output
+                ME      : in  std_logic;                             -- Habilita memória
+                addr    : in  std_logic_vector(n-1 downto 0);        -- Endereçamento (n bits)
+                data_in : in  std_logic_vector(word-1 downto 0);     -- Palavra de entrada (word bits)
+                data_out: out std_logic_vector(word-1 downto 0)      -- Palavra de saída (word bits)
+            ); 
+        end component generic_ram;
+
+        -- MUX 2 selects e 16 bits
+
+        component mux_2_16bit is
+            port (
+                data_in_1   : in  std_logic_vector(15 downto 0);     -- Dados de entrada 1
+                data_in_2   : in  std_logic_vector(15 downto 0);     -- Dados de entrada 2
+                data_in_3   : in  std_logic_vector(15 downto 0);     -- Dados de entrada 3
+                data_in_4   : in  std_logic_vector(15 downto 0);     -- Dados de entrada 4
+                sel_1       : in  std_logic;                         -- Sinal de seleção 1
+                sel_0       : in  std_logic;                         -- Sinal de seleção 2
+                data_out    : out std_logic_vector(15 downto 0)      -- Dados de saída
+            );
+        end component mux_2_16bit;
+
+          -- MUX 1 select e 16 bits
+
+        component mux_16bit is
+            port (
+                data_in_1   : in  std_logic_vector(15 downto 0);  -- Dados de entrada 1
+                data_in_2   : in  std_logic_vector(15 downto 0);  -- Dados de entrada 2
+                sel         : in  std_logic;                      -- Sinal de seleção
+                data_out    : out std_logic_vector(15 downto 0)   -- Dados de saída
+            );
+        end component mux_16bit;
+
 begin
 
     -- Instância o relógio interno da CPU: TIMER
@@ -140,7 +187,7 @@ begin
             pc_count                         -- Direciona o valor do PC para pc_count
         );
 
-    -- Instância a memória de programa: ROM
+    -- Instância da memória de programa: ROM
 
     ROM: generic_rom
         port map(
@@ -178,6 +225,55 @@ begin
     );
 
     d_out <= SelAccSrc0;
+
+    -- Instância da memória de dados: RAM
+
+    RAM: generic_ram 
+        port map(
+            not(WR_RAM),
+            '1',
+            '1',
+            operand,
+            acc_out,
+            ram_data
+        );
+
+    -- Instância de um registrador: ACC (Acumulador)
+
+    ACC: register_sync_16bit
+        port map(
+            acc_in,                          -- Recebe instrução a partir do sinal da memória de programa
+            WR_ACC,                          -- Habilita a escrita no Instruction Register (IR)
+            MR,                              -- Master Reset ativo em LOW para o registrador
+            internal_clk,                    -- Sincroniza o registrador com o clock interno da CPU
+            acc_out                          -- Saída do dado gravado no IR
+        );
+
+    -- MUX entrada do ACC (Acumulador):
+
+    MUX_ACC: mux_2_16bit 
+        port map(
+            ram_data,                        -- Dados de entrada 1 (ram_data)
+            operand_ex,                      -- Dados de entrada 2 (operand_ex)
+            alu_out,                         -- Dados de entrada 3 (alu_out)
+            x"0000",                         -- Dados de entrada 4 (não usada)
+            SelAccSrc1,                      -- Sinal de seleção 1 (MSB)
+            SelAccSrc0,                      -- Sinal de seleção 2 (LSB)
+            acc_in                           -- Dados de saída
+        );
+
+    -- MUX entrada da ALU:
+
+    MUX_ALU: mux_16bit
+        port map(
+            ram_data,                        -- Dados de entrada 1
+            operand_ex,                      -- Dados de entrada 2
+            SelUlaSrc,                       -- Sinal de seleção
+            alu_out                          -- Dados de saída
+        );
+
+    -- ALU:
+
 
 end architecture main;
 

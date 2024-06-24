@@ -1,40 +1,41 @@
---| Libraries |------------------------------------------------------------------------------
+--| Libraries |----------------------------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
---| CPU |------------------------------------------------------------------------------------
+--| CPU |----------------------------------------------------------------------------------------------------------
 
 entity cpu is
 
     -- Define genericamente os valores que serão fornecidos pelo arquivo de testes:
 
     generic(
-        n        : integer := 16;                -- Tamanho em bits do PC
-        f        : integer := 2000;              -- MHz (freq. clock)
-        addr_rom : integer := 16;                -- Bits de endereçamento ROM (instruções)
-        i_word   : integer := 16                 -- Tamanho da palavra de instrução
+        n        : integer := 16;                              -- Tamanho em bits do PC
+        f        : integer := 2000;                            -- MHz (freq. clock)
+        addr_rom : integer := 16;                              -- Bits de endereçamento ROM (instruções)
+        i_word   : integer := 16                               -- Tamanho da palavra de instrução
     );
 
     -- Define as portas da CPU - entradas, saídas e tipos básicos:
 
     port(
-        enable      : in  std_logic;                          -- Enable (ativo em HIGH)
-        MR          : in  std_logic;                          -- Master-Reset (ativo em LOW)
-        pc_count    : out std_logic_vector(n-1 downto 0);     -- Program Counter (PC)
-        instruction : out std_logic_vector(i_word-1 downto 0) -- Leitura da ROM - instrução
+        enable_clk  : in  std_logic;                           -- Habilita pulsos de clock
+        MR          : in  std_logic;                           -- Master-Reset (ativo em LOW)
+        pc_count    : out std_logic_vector(n-1 downto 0);      -- Program Counter (PC)
+        inst_out    : out std_logic_vector(i_word-1 downto 0)  -- Leitura do IR
     );
 
 end entity cpu;
 
---| Lógica |----------------------------------------------------------------------------------
+--| Lógica |--------------------------------------------------------------------------------------------------------
 
 architecture main of cpu is
 
     -- Definindo sinais internos à CPU:
 
-    signal internal_clk : std_logic;                         -- Clock interno da CPU (recebe o clock do TIMER)
-    --signal instruction  : std_logic_vector(i_word-1 to 0);   -- Define a instrução que será carregada no IR
+    signal internal_clk : std_logic;                            -- Clock interno da CPU (recebe o clock do TIMER)
+    signal instruction  : std_logic_vector(i_word-1 downto 0);  -- Define a instrução que será carregada no IR
+    signal WR_IR        : std_logic := '1';                     -- Sinal de controle WR_IR
 
     -- Definindo os componentes internos da CPU:
 
@@ -66,20 +67,29 @@ architecture main of cpu is
         -- Read Only Memory:
 
         component generic_rom is
-
             generic (
                 n      : integer := addr_rom;   -- Quantidade de bits de endereçamento
                 word   : integer := i_word      -- Tamanho da palavra de memória
             );
-
             port (
                 cs       : in std_logic;                               -- Chip Selection (CS) ativo em LOW
                 oe       : in std_logic;                               -- Output Enable (OE) ativo em LOW
                 address  : in std_logic_vector(n-1 downto 0);          -- Barramento de endereço
                 data_out : out std_logic_vector(word-1 downto 0)       -- Saída de dados
             );
-
         end component generic_rom;
+
+        -- Registrador de 16 bits:
+
+        component register_sync_16bit is
+            port (
+                data_in   : in  std_logic_vector(15 downto 0);  -- Dados de entrada
+                enable    : in  std_logic;                      -- Sinal de habilitação
+                MR        : in  std_logic;                      -- Sinal de master-reset
+                CLK       : in  std_logic;                      -- Sinal de clock
+                data_out  : out std_logic_vector(15 downto 0)   -- Dados de saída
+            );
+        end component register_sync_16bit;
 
 begin
 
@@ -88,7 +98,7 @@ begin
     TIMER: generic_timer 
         port map(
             internal_clk,                    -- Recebe, a partir do TIMER o internal_clock
-            enable                           -- Sinal para habilitar o TIMER interno da CPU
+            enable_clk                       -- Sinal para habilitar o TIMER interno da CPU
         );
 
     -- Instância o circuito Program Counter: PC_counter
@@ -104,12 +114,23 @@ begin
 
     ROM: generic_rom
         port map(
-            '0',
-            '0',
-            pc_count,
-            instruction
+            '0',                             -- Seleciona a memória ROM (Chip Select) - ativo em LOW
+            '0',                             -- Habilita a leitura da memória de programa
+            pc_count,                        -- Endereça a memória a partir do PC
+            instruction                      -- Obtém instrução a partir do endereço
+        );
+
+    -- Instância de um registrador: IR (Instruction Register)
+
+    IR: register_sync_16bit
+        port map(
+            instruction,                     -- Recebe instrução a partir do sinal da memória de programa
+            WR_IR,                           -- Habilita a escrita no Instruction Register (IR)
+            MR,                              -- Master Reset ativo em LOW para o registrador
+            internal_clk,                    -- Sincroniza o registrador com o clock interno da CPU
+            inst_out                         -- Saída do dado gravado no IR
         );
 
 end architecture main;
 
-----------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------

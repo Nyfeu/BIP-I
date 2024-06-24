@@ -23,10 +23,10 @@ architecture teste of cpu_tb is
   
   -- Sinais sendo rastreados:
 
-  signal enable   : std_logic := '1';                       -- Enable (ativo em HIGH)
-  signal MR       : std_logic;                              -- Master-Reset (ativo em LOW)
-  signal pc_count : std_logic_vector(n-1 downto 0);         -- Program Count
-  signal instruct : std_logic_vector(i_word-1 downto 0);    -- Instrução lida da ROM
+  signal enable_clk : std_logic := '1';                       -- Enable (ativo em HIGH)
+  signal MR         : std_logic;                              -- Master-Reset (ativo em LOW)
+  signal pc_count   : std_logic_vector(n-1 downto 0);         -- Program Count
+  signal inst_out   : std_logic_vector(i_word-1 downto 0);    -- Instrução lida do IR
 
   -- Declaração do componente CPU:
 
@@ -40,10 +40,10 @@ architecture teste of cpu_tb is
     );
 
     port(
-        enable      : in  std_logic;                          -- Enable (ativo em HIGH)
+        enable_clk  : in  std_logic;                          -- Habilita pulsos de clock
         MR          : in  std_logic;                          -- Master-Reset (ativo em LOW)
         pc_count    : out std_logic_vector(n-1 downto 0);     -- Program Count
-        instruction : out std_logic_vector(i_word-1 downto 0) -- Leitura da ROM - instrução
+        inst_out    : out std_logic_vector(i_word-1 downto 0) -- Leitura do IR
     );
 
   end component cpu;
@@ -52,7 +52,7 @@ begin
 
     -- Instanciando o BIP (do tipo cpu) e declarando as portas:
 
-    BIP: cpu port map (enable, MR, pc_count, instruct);
+    BIP: cpu port map (enable_clk, MR, pc_count, inst_out);
 
     -- Testando o Program Counter (PC) do BIP:
 
@@ -67,7 +67,7 @@ begin
         wait for 1 ns;
         MR <= '1';
         wait for 30 ns;
-        enable <= '0';
+        enable_clk <= '0';
 
         wait;
 

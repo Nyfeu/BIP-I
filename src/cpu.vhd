@@ -22,7 +22,8 @@ entity cpu is
         enable_clk  : in  std_logic;                           -- Habilita pulsos de clock
         MR          : in  std_logic;                           -- Master-Reset (ativo em LOW)
         pc_count    : out std_logic_vector(n-1 downto 0);      -- Program Counter (PC)
-        inst_out    : out std_logic_vector(i_word-1 downto 0)  -- Leitura do IR
+        d_out       : out std_logic_vector(i_word-1 downto 0); -- Leitura do IR
+        op_out      : out std_logic_vector(3 downto 0)         -- Código de operação
     );
 
 end entity cpu;
@@ -34,8 +35,12 @@ architecture main of cpu is
     -- Definindo sinais internos à CPU:
 
     signal internal_clk : std_logic;                            -- Clock interno da CPU (recebe o clock do TIMER)
-    signal instruction  : std_logic_vector(i_word-1 downto 0);  -- Define a instrução que será carregada no IR
+    signal inst_data    : std_logic_vector(i_word-1 downto 0);  -- Define a instrução que será carregada no IR
     signal WR_IR        : std_logic := '1';                     -- Sinal de controle WR_IR
+    signal instruction  : std_logic_vector(i_word-1 downto 0);  -- Instrução lida da saída do IR
+    signal op_code      : std_logic_vector(3 downto 0);         -- Código de operação
+    signal operand      : std_logic_vector(11 downto 0);        -- Operando 12 bits
+    signal operand_ex   : std_logic_vector(15 downto 0);        -- Operando extendido (16 bits)
 
     -- Definindo os componentes internos da CPU:
 
@@ -117,19 +122,30 @@ begin
             '0',                             -- Seleciona a memória ROM (Chip Select) - ativo em LOW
             '0',                             -- Habilita a leitura da memória de programa
             pc_count,                        -- Endereça a memória a partir do PC
-            instruction                      -- Obtém instrução a partir do endereço
+            inst_data                        -- Obtém instrução a partir do endereço
         );
 
     -- Instância de um registrador: IR (Instruction Register)
 
     IR: register_sync_16bit
         port map(
-            instruction,                     -- Recebe instrução a partir do sinal da memória de programa
+            inst_data,                       -- Recebe instrução a partir do sinal da memória de programa
             WR_IR,                           -- Habilita a escrita no Instruction Register (IR)
             MR,                              -- Master Reset ativo em LOW para o registrador
             internal_clk,                    -- Sincroniza o registrador com o clock interno da CPU
-            inst_out                         -- Saída do dado gravado no IR
+            instruction                      -- Saída do dado gravado no IR
         );
+
+    -- Lendo o op_code e operand:
+
+    op_code <= instruction(15 downto 12);
+    operand <= instruction(11 downto 0);
+
+    -- Extensão de sinal do operando:
+
+    operand_ex <= x"0" & operand;
+    d_out <= operand_ex;   
+    op_out <= op_code; 
 
 end architecture main;
 

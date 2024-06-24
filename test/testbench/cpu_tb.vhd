@@ -36,7 +36,7 @@ begin
 
     BIP: cpu port map (enable_clk, MR);
 
-    -- Testando o Program Counter (PC) do BIP:
+    -- Testando o BIP (duração da execução de 100 ns):
 
     test: process
     begin

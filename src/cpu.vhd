@@ -45,6 +45,8 @@ architecture main of cpu is
     signal ram_data     : std_logic_vector(15 downto 0);              -- Valor lido da RAM
     signal alu_out      : std_logic_vector(15 downto 0);              -- Resultado lido da ALU
     signal alu_src      : std_logic_vector(15 downto 0);              -- Entrada da ALU
+    signal oe           : std_logic := '1';                           -- Habilita output (sempre habilitado)
+    signal ME           : std_logic := '1';                           -- Habilita memória (sempre habilitado)
 
     -- Definindo sinais de controle:
 
@@ -52,7 +54,7 @@ architecture main of cpu is
     signal OP_ULA       : std_logic;                                  -- Sinal de seleção de operação da ALU
     signal WR_RAM       : std_logic;                                  -- Sinal de escrita na memória de dados (RAM)
     signal WR_PC        : std_logic;                                  -- Sinal de incremento do PC
-    signal WR_IR        : std_logic := '1';                           -- Sinal de controle WR_IR
+    signal WR_IR        : std_logic;                                  -- Sinal de controle WR_IR
     signal WR_ACC       : std_logic;                                  -- Sinal de escrita no acumulador (ACC)
     signal SelAccSrc1   : std_logic;                                  -- Seleciona dados para o ACC (MSB)
     signal SelACCSrc0   : std_logic;                                  -- Seleciona dados para o ACC (LSB)
@@ -100,9 +102,9 @@ architecture main of cpu is
             );
         end component generic_rom;
 
-        -- Registrador de 16 bits:
+        -- Registrador de 16 bits detector de borda de descida:
 
-        component register_sync_16bit is
+        component register_sync_falling_16bit is
             port (
                 data_in   : in  std_logic_vector(15 downto 0);         -- Dados de entrada
                 enable    : in  std_logic;                             -- Sinal de habilitação
@@ -110,20 +112,45 @@ architecture main of cpu is
                 CLK       : in  std_logic;                             -- Sinal de clock
                 data_out  : out std_logic_vector(15 downto 0)          -- Dados de saída
             );
-        end component register_sync_16bit;
+        end component register_sync_falling_16bit;
+
+        -- Registrador de 16 bits detector de borda de descida:
+
+        component register_sync_rising_16bit is
+            port (
+                data_in   : in  std_logic_vector(15 downto 0);         -- Dados de entrada
+                enable    : in  std_logic;                             -- Sinal de habilitação
+                MR        : in  std_logic;                             -- Sinal de master-reset
+                CLK       : in  std_logic;                             -- Sinal de clock
+                data_out  : out std_logic_vector(15 downto 0)          -- Dados de saída
+            );
+        end component register_sync_rising_16bit;
+
+        -- Registrador de 16 bits detector de borda de descida sem porta enable:
+
+        component register_se_falling_16bit is
+            port (
+                data_in   : in  std_logic_vector(15 downto 0);         -- Dados de entrada
+                MR        : in  std_logic;                             -- Sinal de master-reset
+                CLK       : in  std_logic;                             -- Sinal de clock
+                data_out  : out std_logic_vector(15 downto 0)          -- Dados de saída
+            );
+        end component register_se_falling_16bit;
 
         -- Decodificador de instruções
 
         component decoder is
             port (
                 op_code       : in  std_logic_vector(3 downto 0);      -- Entrada do código de operação
+                clk           : in  std_logic;                         -- Entrada do clock para o WR_IR
                 sel_ula_src   : out std_logic;                         -- Restante dos sinais de controle
                 WR_RAM        : out std_logic;
                 WR_PC         : out std_logic;
                 WR_ACC        : out std_logic;
                 sel_acc_src_1 : out std_logic;
                 sel_acc_src_0 : out std_logic;
-                op_ula        : out std_logic
+                op_ula        : out std_logic;
+                WR_IR         : out std_logic
             );
         end component decoder;
 
@@ -211,12 +238,11 @@ begin
 
     -- Instância de um registrador: IR (Instruction Register)
 
-    IR: register_sync_16bit
+    IR: register_se_falling_16bit
         port map(
             inst_data,                       -- Recebe instrução a partir do sinal da memória de programa
-            WR_IR,                           -- Habilita a escrita no Instruction Register (IR)
             MR,                              -- Master Reset ativo em LOW para o registrador
-            internal_clk,                    -- Sincroniza o registrador com o clock interno da CPU
+            WR_IR,                           -- Habilita a escrita no Instruction Register (IR)
             instruction                      -- Saída do dado gravado no IR
         );
 
@@ -233,7 +259,7 @@ begin
     -- Instanciando o decodificador de instruções:
 
     DECR: decoder port map(
-        op_code, SelUlaSrc, WR_RAM, WR_PC, WR_ACC, SelAccSrc1, SelAccSrc0, OP_ULA
+        op_code, internal_clk, SelUlaSrc, WR_RAM, WR_PC, WR_ACC, SelAccSrc1, SelAccSrc0, OP_ULA, WR_IR
     );
 
     -- Instância da memória de dados: RAM
@@ -241,8 +267,8 @@ begin
     RAM: generic_ram 
         port map(
             not(WR_RAM),
-            '1',
-            '1',
+            oe,
+            ME,
             operand,
             acc_out,
             ram_data
@@ -250,7 +276,7 @@ begin
 
     -- Instância de um registrador: ACC (Acumulador)
 
-    ACC: register_sync_16bit
+    ACC: register_sync_rising_16bit
         port map(
             acc_in,                          -- Recebe instrução a partir do sinal da memória de programa
             WR_ACC,                          -- Habilita a escrita no Instruction Register (IR)
@@ -288,7 +314,7 @@ begin
         port map(
             acc_out,                         -- Recebe dado do acumulador
             alu_src,                         -- Recebe dado do MUX_ALU
-            not(OP_ULA),                          -- Sinal de operação
+            not(OP_ULA),                     -- Sinal de operação
             alu_out                          -- Dados de saída
         );
 

@@ -23,13 +23,15 @@ entity decoder is
   
   port (
     op_code       : in  std_logic_vector(3 downto 0);
+    clk           : in  std_logic;
     sel_ula_src   : out std_logic;
     WR_RAM        : out std_logic;
     WR_PC         : out std_logic;
     WR_ACC        : out std_logic;
     sel_acc_src_1 : out std_logic;
     sel_acc_src_0 : out std_logic;
-    op_ula        : out std_logic
+    op_ula        : out std_logic;
+    WR_IR         : out std_logic
   );
 
 end decoder;
@@ -69,6 +71,9 @@ begin
   x <= not(op_code(3)) and not(op_code(2));
   y <= not(op_code(1)) and not(op_code(3));
   op_ula <= x or y;
+
+  -- WR_IR
+  WR_IR <= not(clk);
 
 end architecture main;
 

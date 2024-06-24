@@ -24,7 +24,7 @@ entity generic_timer is
     );
 
     port(
-        clk : out std_logic := '0';
+        clk : out std_logic;
         enable : in std_logic
     );
 
@@ -38,12 +38,13 @@ begin
     clock_generator : process
     begin
         
+        clk <= '0';
+        wait for (1000 ns / clk_freq);
+        
         while enable = '1' loop
             clk <= not clk;
             wait for (1000 ns / clk_freq);
         end loop;
-        
-        clk <= '0';
 
         wait;
 

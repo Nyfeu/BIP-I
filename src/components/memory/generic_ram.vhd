@@ -46,7 +46,7 @@ end entity generic_ram;
 architecture main of generic_ram is
 
     type ram_type is array (0 to (2**n)-1) of std_logic_vector(word-1 downto 0);
-    signal ram_block : ram_type;
+    signal ram_block : ram_type := (others => x"0000");
 
 begin
 
@@ -55,13 +55,13 @@ begin
 
         if ME = '1' then
 
-            if we = '0' then    -- Operação de escrita (WR)
+            if falling_edge(we) then    -- Operação de escrita (WR)
                 
                 ram_block(to_integer(unsigned(addr))) <= data_in;
 
             end if;
 
-            if oe = '1' then    -- Operação de leitura (RD)
+            if oe = '1' then            -- Operação de leitura (RD)
 
                 data_out <= ram_block(to_integer(unsigned(addr)));
 

@@ -7,7 +7,7 @@ use ieee.numeric_std.all;
 
 entity cpu is
 
-    -- Define genericamente os valores que serão fornecidos pelo arquivo de testes:
+    -- Define os valores genéricos que serão fornecidos pelo arquivo de testes:
 
     generic(
         n        : integer := 16;                              -- Tamanho em bits do PC
@@ -20,10 +20,7 @@ entity cpu is
 
     port(
         enable_clk  : in  std_logic;                           -- Habilita pulsos de clock
-        MR          : in  std_logic;                           -- Master-Reset (ativo em LOW)
-        pc_count    : out std_logic_vector(n-1 downto 0);      -- Program Counter (PC)
-        d_out       : out std_logic_vector(n-1 downto 0);      -- Valor do ACC
-        op_out      : out std_logic_vector(3 downto 0)         -- Código de operação
+        MR          : in  std_logic                            -- Master-Reset (ativo em LOW)
     );
 
 end entity cpu;
@@ -35,6 +32,7 @@ architecture main of cpu is
     -- Definindo sinais internos à CPU:
 
     signal internal_clk : std_logic;                                  -- Clock interno da CPU (recebe o clock do TIMER)
+    signal pc_out       : std_logic_vector(n - 1 downto 0);           -- Valor de saída do contador (valor do PC)
     signal inst_data    : std_logic_vector(i_word-1 downto 0);        -- Define a instrução que será carregada no IR
     signal instruction  : std_logic_vector(i_word-1 downto 0);        -- Instrução lida da saída do IR
     signal op_code      : std_logic_vector(3 downto 0);               -- Código de operação
@@ -223,7 +221,7 @@ begin
             internal_clk,                    -- Atribui o clock interno da CPU para o contador
             MR,                              -- Sinal de Master-Reset do PC_counter
             WR_PC,                           -- Habilita a contagem do PC
-            pc_count                         -- Direciona o valor do PC para pc_count
+            pc_out                         -- Direciona o valor do PC para pc_count
         );
 
     -- Instância da memória de programa: ROM
@@ -232,7 +230,7 @@ begin
         port map(
             '0',                             -- Seleciona a memória ROM (Chip Select) - ativo em LOW
             '0',                             -- Habilita a leitura da memória de programa
-            pc_count,                        -- Endereça a memória a partir do PC
+            pc_out,                        -- Endereça a memória a partir do PC
             inst_data                        -- Obtém instrução a partir do endereço
         );
 
@@ -254,7 +252,6 @@ begin
     -- Extensão de sinal do operando:
 
     operand_ex <= x"0" & operand;
-    op_out <= op_code; 
 
     -- Instanciando o decodificador de instruções:
 
@@ -317,10 +314,6 @@ begin
             not(OP_ULA),                     -- Sinal de operação
             alu_out                          -- Dados de saída
         );
-
-    -- Jogando valor do ACC para a saída:
-
-    d_out <= acc_out;
 
 end architecture main;
 

@@ -51,7 +51,7 @@ architecture main of cpu is
     signal SelUlaSrc    : std_logic;                                  -- Sinal de seleção da fonte para a ALU
     signal OP_ULA       : std_logic;                                  -- Sinal de seleção de operação da ALU
     signal WR_RAM       : std_logic;                                  -- Sinal de escrita na memória de dados (RAM)
-    signal WR_PC        : std_logic;                                  -- Sinal de incremento do PC (modificar)
+    signal WR_PC        : std_logic;                                  -- Sinal de incremento do PC
     signal WR_IR        : std_logic := '1';                           -- Sinal de controle WR_IR
     signal WR_ACC       : std_logic;                                  -- Sinal de escrita no acumulador (ACC)
     signal SelAccSrc1   : std_logic;                                  -- Seleciona dados para o ACC (MSB)
@@ -80,6 +80,7 @@ architecture main of cpu is
             port (
                 clk    : in  std_logic;
                 MR     : in  std_logic;
+                en     : in  std_logic;
                 count  : out std_logic_vector(n - 1 downto 0)
             );
         end component generic_counter;
@@ -194,6 +195,7 @@ begin
         port map(
             internal_clk,                    -- Atribui o clock interno da CPU para o contador
             MR,                              -- Sinal de Master-Reset do PC_counter
+            WR_PC,                           -- Habilita a contagem do PC
             pc_count                         -- Direciona o valor do PC para pc_count
         );
 

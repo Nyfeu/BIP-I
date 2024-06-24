@@ -2,7 +2,7 @@
 --
 --                  __________
 --          clk >--|          |
---                 | Contador |--> count (n bits) 
+--           en >--| Contador |--> count (n bits) 
 --           MR >--|__________|
 --
 --
@@ -22,6 +22,7 @@ entity generic_counter is
     port (
         clk    : in  std_logic;
         MR     : in  std_logic;
+        en     : in  std_logic;
         count  : out std_logic_vector(n - 1 downto 0)
     );
 end entity generic_counter;
@@ -41,7 +42,7 @@ begin
 
             count_temp <= (others => '0');
 
-        elsif falling_edge(clk) then
+        elsif (falling_edge(clk) and en = '1') then
 
             count_temp <= count_temp + 1;
 

@@ -33,7 +33,9 @@ entity decoder is
     sel_acc_src_0 : out std_logic;                     -- Seleção do input do ACC (LSB)
     op_ula        : out std_logic;                     -- Seleciona operação da ULA
     WR_IR         : out std_logic;                     -- Sinal de escrita no IR
-    LOAD          : out std_logic                      -- Sinal de carga para o PC (JMP)
+    LOAD          : out std_logic;                     -- Sinal de carga para o PC (JMP)
+    read_io       : out std_logic;                     -- Sinal para leitura do dispositivo de I/O
+    write_io      : out std_logic                      -- Sinal para escrita no dispositivo de I/O
   );
 
 end decoder;
@@ -89,13 +91,14 @@ begin
   -- WR_ACC
   v <= (not(op_code(3)) and op_code(2));
   w <= (op_code(1) and not(op_code(3)));
-  WR_ACC <= v or w;
+  WR_ACC <= v or w or ((op_code(2) and op_code(1)) and not(op_code(0)));
 
   -- SelAccSrc1
-  sel_acc_src_1 <= not(op_code(3)) and op_code(2);
+  sel_acc_src_1 <= (not(op_code(3)) and op_code(2)) or ((op_code(2) and op_code(1)) and not(op_code(0)));
 
   -- SelAccSrc0
-  sel_acc_src_0 <= (((not(op_code(3)) and not(op_code(2))) and op_code(1)) and op_code(0));
+  sel_acc_src_0 <= (((not(op_code(3)) and not(op_code(2))) and op_code(1)) and op_code(0)) or 
+                   (((op_code(3) and op_code(2)) and op_code(1)) and not(op_code(0)));
 
   -- op_ula
   x <= not(op_code(3)) and not(op_code(2));
@@ -114,6 +117,12 @@ begin
   -- Lendo flags do registrador:
   ZF_out <= flag_out(1);
   GZ_out <= flag_out(0);
+
+  -- read_io
+  read_io <= (((op_code(3) and op_code(2)) and op_code(1)) and not(op_code(0)));
+
+  -- write_io
+  write_io <= (((op_code(3) and op_code(2)) and op_code(1)) and op_code(0));
 
 end architecture main;
 

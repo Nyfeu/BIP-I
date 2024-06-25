@@ -24,11 +24,11 @@ entity register_rising_edge_enable is
         n      : integer := 16                          -- Quantidade de bits
     );
     port (
-        data_in   : in  std_logic_vector(15 downto 0);  -- Dados de entrada
+        data_in   : in  std_logic_vector(n-1 downto 0); -- Dados de entrada
         enable    : in  std_logic;                      -- Sinal de habilitação
         MR        : in  std_logic;                      -- Sinal de master-reset
         CLK       : in  std_logic;                      -- Sinal de clock
-        data_out  : out std_logic_vector(15 downto 0)   -- Dados de saída
+        data_out  : out std_logic_vector(n-1 downto 0)  -- Dados de saída
     );
 end entity register_rising_edge_enable;
 

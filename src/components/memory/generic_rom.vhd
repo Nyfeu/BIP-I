@@ -44,6 +44,25 @@ architecture main of generic_rom is
 
     -- Gravação do código a ser executado pela CPU:
 
+    -- Teste: "Pulos condicionais"
+    
+    -- constant memory : memory_type := (
+    --     0 => x"3007",  -- Define ACC = 7
+    --     1 => x"1007",  -- valor do (0x007) = 7
+    --     2 => x"9000",  -- NOP
+    --     3 => x"300E",  -- Define ACC = 14
+    --     4 => x"A007",  -- Compara ACC com 7
+    --     5 => x"B00F",  -- Caso ACC ≠ 7 - ou seja, 7 ≠ 14 (✓)
+    --     6 => x"800A",  -- Caso ACC = 7 - ou seja, 7 = 14 (x) - finaliza (PC_out = A)
+    --     15 => x"D012", -- Caso ACC < 7 - ou seja, 7 > 14 (x) - finaliza (PC_out = 12) 
+    --     16 => x"C01B", -- Caso ACC > 7 - ou seja, 7 < 14 (✓)
+    --     27 => x"C02B", -- Caso ACC > 7 - ou seja, 7 < 14 (✓) - finaliza (PC_out = 2B)
+    --     28 => x"D02C", -- Caso ACC < 7 - ou seja, 7 > 14 (x) - finaliza (PC_out = 2C)
+    --     others => x"0000"
+    -- );
+
+    -- Teste: "Sequência de Fibonacci"
+
     constant memory : memory_type := (
         0 => x"3000",
         1 => x"1000",

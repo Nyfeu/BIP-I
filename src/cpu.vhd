@@ -87,7 +87,8 @@ architecture main of cpu is
     signal ME           : std_logic := '1';                                -- Habilita memória (sempre habilitado)
     signal PC_load      : std_logic := '0';                                -- Sinal de carregamento (ativo em HIGH)
     signal load_val     : std_logic_vector(n - 1 downto 0);                -- Valor a ser carregado no PC
-    signal ZF           : std_logic;                                       -- Zero flag (ZF)
+    signal ZF_in        : std_logic;                                       -- Zero flag (ZF_in) lida da ALU
+    signal GZ_in        : std_logic;                                       -- Greater than Zero flag (GZ_in) lida da ALU
 
     -- Definindo sinais de controle:
 
@@ -172,17 +173,20 @@ architecture main of cpu is
 
         component decoder is
             port (
-                OP_CODE       : in  std_logic_vector(3 downto 0);          -- Entrada do código de operação
-                clk           : in  std_logic;                             -- Entrada do clock para o WR_IR
-                sel_ula_src   : out std_logic;                             -- Restante dos sinais de controle
-                WR_RAM        : out std_logic;
-                WR_PC         : out std_logic;
-                WR_ACC        : out std_logic;
-                sel_acc_src_1 : out std_logic;
-                sel_acc_src_0 : out std_logic;
-                op_ula        : out std_logic;
-                WR_IR         : out std_logic;                             -- Sinal de escrita no IR
-                LOAD          : out std_logic                              -- Sinal de carga para o PC (JMP)
+                op_code       : in  std_logic_vector;              -- Lê o código da operação em exec
+                clk           : in  std_logic;                     -- Recebe o clock interno da CPU
+                ZF            : in  std_logic;                     -- Zero Flag
+                GZ            : in  std_logic;                     -- Flag "Greater than Zero"
+                MR            : in  std_logic;                     -- Master-Reset para o registrador de status       
+                sel_ula_src   : out std_logic;                     -- Seleciona operando para a ULA
+                WR_RAM        : out std_logic;                     -- Sinal de escrita na RAM
+                WR_PC         : out std_logic;                     -- Sinal de incremento do PC
+                WR_ACC        : out std_logic;                     -- Sinal de escrita no ACC
+                sel_acc_src_1 : out std_logic;                     -- Seleção do input do ACC (MSB)
+                sel_acc_src_0 : out std_logic;                     -- Seleção do input do ACC (LSB)
+                op_ula        : out std_logic;                     -- Seleciona operação da ULA
+                WR_IR         : out std_logic;                     -- Sinal de escrita no IR
+                LOAD          : out std_logic                      -- Sinal de carga para o PC (JMP)
             );
         end component decoder;
 
@@ -235,7 +239,8 @@ architecture main of cpu is
                 data_in_1, data_in_2 : in  std_logic_vector(15 downto 0);  -- Dados de entrada
                 op_ula               : in  std_logic;                      -- Sinal de operação
                 data_out             : out std_logic_vector(15 downto 0);  -- Dados de saída
-                ZF                   : out std_logic                       -- Zero Flag
+                ZF                   : out std_logic;                      -- Zero Flag
+                GZ                   : out std_logic                       -- Greater than Zero (flag)
             );
           end component arithmetic_logic_unit;
 
@@ -295,7 +300,7 @@ begin
     -- Instanciando o decodificador de instruções:
 
     DECR: decoder port map(
-        OP_CODE, CLOCK, SelUlaSrc, WR_RAM, WR_PC, WR_ACC, SelAccSrc1, SelAccSrc0, OP_ULA, WR_IR, PC_load
+        OP_CODE, CLOCK, ZF_in, GZ_in, MR, SelUlaSrc, WR_RAM, WR_PC, WR_ACC, SelAccSrc1, SelAccSrc0, OP_ULA, WR_IR, PC_load
     );
 
     -- Instância da memória de dados: RAM
@@ -352,7 +357,8 @@ begin
             ALU_in,                                                        -- Recebe dado do MUX_ALU
             not(OP_ULA),                                                   -- Sinal de operação
             ALU_out,                                                       -- Dados de saída
-            ZF                                                             -- Zero flag (ZF)
+            ZF_in,                                                         -- Zero flag (ZF_in)
+            GZ_in                                                          -- Greater than Zero (GZ_in)
         );
 
 end architecture main;

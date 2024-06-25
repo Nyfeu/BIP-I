@@ -31,4 +31,4 @@ view:
 
 # Clean up generated files in output directory
 clean:
-	$(RM) $(OUTPUT_DIR)/$(TESTBENCH).vcd
+	$(RM) ".\test\waveform\cpu_tb.vcd"

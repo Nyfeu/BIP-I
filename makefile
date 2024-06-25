@@ -1,6 +1,6 @@
 # Define the default VHDL files directory and the testbench entity name
 VHDL_DIR ?= src/components
-VHDL_FILES := $(wildcard $(VHDL_DIR)/**/*.vhd)
+VHDL_FILES := $(wildcard $(VHDL_DIR)/**/*.vhd) $(wildcard $(VHDL_DIR)/**/**/*.vhd)
 VHDL_CPU := src/cpu.vhd
 TESTBENCH = cpu_tb
 OUTPUT_DIR = test/waveform

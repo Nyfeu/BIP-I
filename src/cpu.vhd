@@ -239,7 +239,8 @@ architecture main of cpu is
             port (
                 data_in_1, data_in_2 : in  std_logic_vector(15 downto 0);  -- Dados de entrada
                 op_ula               : in  std_logic;                      -- Sinal de operação
-                data_out             : out std_logic_vector(15 downto 0)   -- Dados de saída
+                data_out             : out std_logic_vector(15 downto 0);  -- Dados de saída
+                ZF                   : out std_logic                       -- Zero Flag
             );
           end component arithmetic_logic_unit;
 

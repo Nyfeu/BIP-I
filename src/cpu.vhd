@@ -1,12 +1,13 @@
 -- =============================================================================================================================================
--- 
---                              Descrição de Hardware (VHDL)
---                        Unidade Central de Processamento (CPU)
 --
--- =============================================================================================================================================
---
---  ->> AUTOR: André Solano F. R. Maiolini (19.02012-0)
---  ->> DATA: 24/06/2024
+--                                                                                 ____________________________
+--                                                                                /                           /\
+--     Descrição de Hardware (VHDL)                                              /         BIP I            _/ /\
+--     Unidade Central de Processamento (CPU)                                   /        (Harvard)         / \/
+--                                                                             /                           /\
+--     ->> AUTOR: André Solano F. R. Maiolini (19.02012-0)                    /___________________________/ /
+--     ->> DATA: 24/06/2024                                                   \___________________________\/
+--                                                                             \ \ \ \ \ \ \ \ \ \ \ \ \ \ \
 --
 -- ============+================================================================================================================================
 --   Descrição |
@@ -146,7 +147,7 @@ architecture main of cpu is
 
         -- Registrador de 16 bits detector de borda de descida com enable:
 
-        component register_falling_edge_enable_16bit is
+        component register_rising_edge_enable is
             port (
                 data_in   : in  std_logic_vector(15 downto 0);             -- Dados de entrada
                 enable    : in  std_logic;                                 -- Sinal de habilitação
@@ -154,30 +155,18 @@ architecture main of cpu is
                 CLK       : in  std_logic;                                 -- Sinal de clock
                 data_out  : out std_logic_vector(15 downto 0)              -- Dados de saída
             );
-        end component register_falling_edge_enable_16bit;
-
-        -- Registrador de 16 bits detector de borda de descida com enable:
-
-        component register_rising_edge_enable_16bit is
-            port (
-                data_in   : in  std_logic_vector(15 downto 0);             -- Dados de entrada
-                enable    : in  std_logic;                                 -- Sinal de habilitação
-                MR        : in  std_logic;                                 -- Sinal de master-reset
-                CLK       : in  std_logic;                                 -- Sinal de clock
-                data_out  : out std_logic_vector(15 downto 0)              -- Dados de saída
-            );
-        end component register_rising_edge_enable_16bit;
+        end component register_rising_edge_enable;
 
         -- Registrador de 16 bits detector de borda de descida sem enable:
 
-        component register_falling_edge_16bit is
+        component register_falling_edge is
             port (
                 data_in   : in  std_logic_vector(15 downto 0);             -- Dados de entrada
                 MR        : in  std_logic;                                 -- Sinal de master-reset
                 CLK       : in  std_logic;                                 -- Sinal de clock
                 data_out  : out std_logic_vector(15 downto 0)              -- Dados de saída
             );
-        end component register_falling_edge_16bit;
+        end component register_falling_edge;
 
         -- Decodificador de instruções (unidade de controle)
 
@@ -286,7 +275,7 @@ begin
 
     -- Instância de um registrador: IR (Instruction Register)
 
-    IR: register_falling_edge_16bit
+    IR: register_falling_edge
         port map(
             ROM_out,                                                       -- Recebe instrução a partir do sinal da memória de programa
             MR,                                                            -- Master Reset para o registrador
@@ -323,7 +312,7 @@ begin
 
     -- Instância de um registrador: ACC (Acumulador)
 
-    ACC: register_rising_edge_enable_16bit
+    ACC: register_rising_edge_enable
         port map(
             ACC_in,                                                        -- Recebe instrução a partir do sinal da memória de programa
             WR_ACC,                                                        -- Habilita a escrita no Instruction Register (IR)

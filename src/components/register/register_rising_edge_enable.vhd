@@ -1,4 +1,4 @@
--- Descrição de Hardware (VHDL) de um Registrador Síncrono 16 bits c/ Master-Reset
+-- Descrição de Hardware (VHDL) de um Registrador Síncrono c/ Master-Reset
 --
 -- ->> Detector de bordas de subida
 -- ->> Com sinal 'enable' para habilitação
@@ -6,7 +6,7 @@
 --                  __________
 --           MR >--|          |
 --          CLK >--| register |--> data_out (16 bits)
---       enable >--|  16 bits |
+--       enable >--|  n bits  |
 --      data_in >--|__________|
 --
 --
@@ -19,7 +19,10 @@ use ieee.std_logic_1164.all;
 
 --| Register |---------------------------------------------------------------------------
 
-entity register_rising_edge_enable_16bit is
+entity register_rising_edge_enable is
+    generic (
+        n      : integer := 16                          -- Quantidade de bits
+    );
     port (
         data_in   : in  std_logic_vector(15 downto 0);  -- Dados de entrada
         enable    : in  std_logic;                      -- Sinal de habilitação
@@ -27,17 +30,17 @@ entity register_rising_edge_enable_16bit is
         CLK       : in  std_logic;                      -- Sinal de clock
         data_out  : out std_logic_vector(15 downto 0)   -- Dados de saída
     );
-end entity register_rising_edge_enable_16bit;
+end entity register_rising_edge_enable;
 
 --| Lógica |------------------------------------------------------------------------------
 
-architecture main of register_rising_edge_enable_16bit is
+architecture main of register_rising_edge_enable is
 begin
 
     process (CLK, MR)
     begin
         if MR = '0' then
-            data_out <= x"0000";
+            data_out <= (others => '0');
         elsif rising_edge(CLK) then
             if enable = '1' then
                 data_out <= data_in;

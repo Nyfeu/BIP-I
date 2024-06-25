@@ -86,6 +86,7 @@ architecture main of cpu is
     signal ME           : std_logic := '1';                                -- Habilita memória (sempre habilitado)
     signal PC_load      : std_logic := '0';                                -- Sinal de carregamento (ativo em HIGH)
     signal load_val     : std_logic_vector(n - 1 downto 0);                -- Valor a ser carregado no PC
+    signal ZF           : std_logic;                                       -- Zero flag (ZF)
 
     -- Definindo sinais de controle:
 
@@ -361,7 +362,8 @@ begin
             ACC_out,                                                       -- Recebe dado do acumulador
             ALU_in,                                                        -- Recebe dado do MUX_ALU
             not(OP_ULA),                                                   -- Sinal de operação
-            ALU_out                                                        -- Dados de saída
+            ALU_out,                                                       -- Dados de saída
+            ZF                                                             -- Zero flag (ZF)
         );
 
 end architecture main;

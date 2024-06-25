@@ -191,7 +191,8 @@ architecture main of cpu is
                 sel_acc_src_1 : out std_logic;
                 sel_acc_src_0 : out std_logic;
                 op_ula        : out std_logic;
-                WR_IR         : out std_logic
+                WR_IR         : out std_logic;                             -- Sinal de escrita no IR
+                LOAD          : out std_logic                              -- Sinal de carga para o PC (JMP)
             );
         end component decoder;
 
@@ -260,6 +261,8 @@ begin
 
     -- Instância do circuito contador para o Program Counter (PC):
 
+    load_val <= EX_SINAL;
+
     PC_counter: generic_counter
         port map(
             CLOCK,                                                         -- Atribui o clock interno da CPU
@@ -302,7 +305,7 @@ begin
     -- Instanciando o decodificador de instruções:
 
     DECR: decoder port map(
-        OP_CODE, CLOCK, SelUlaSrc, WR_RAM, WR_PC, WR_ACC, SelAccSrc1, SelAccSrc0, OP_ULA, WR_IR
+        OP_CODE, CLOCK, SelUlaSrc, WR_RAM, WR_PC, WR_ACC, SelAccSrc1, SelAccSrc0, OP_ULA, WR_IR, PC_load
     );
 
     -- Instância da memória de dados: RAM

@@ -31,7 +31,8 @@ entity decoder is
     sel_acc_src_1 : out std_logic;                     -- Seleção do input do ACC (MSB)
     sel_acc_src_0 : out std_logic;                     -- Seleção do input do ACC (LSB)
     op_ula        : out std_logic;                     -- Seleciona operação da ULA
-    WR_IR         : out std_logic                      -- Sinal de escrita no IR
+    WR_IR         : out std_logic;                     -- Sinal de escrita no IR
+    LOAD          : out std_logic                      -- Sinal de carga para o PC (JMP)
   );
 
 end decoder;
@@ -76,6 +77,11 @@ begin
 
   -- WR_IR
   WR_IR <= not(clk);
+
+  -- LOAD
+  LOAD <= ((op_code(3) and op_code(2)) and not(op_code(1))) or 
+          ((op_code(3) and not(op_code(1))) and not(op_code(0))) or
+          (((op_code(3) and not(op_code(2))) and op_code(1)) and op_code(0));
 
 end architecture main;
 

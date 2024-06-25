@@ -84,6 +84,8 @@ architecture main of cpu is
     signal ALU_in       : std_logic_vector(15 downto 0);                   -- Entrada da ALU
     signal OE           : std_logic := '1';                                -- Habilita output da memória (sempre habilitado)
     signal ME           : std_logic := '1';                                -- Habilita memória (sempre habilitado)
+    signal PC_load      : std_logic := '0';                                -- Sinal de carregamento (ativo em HIGH)
+    signal load_val     : std_logic_vector(n - 1 downto 0);                -- Valor a ser carregado no PC
 
     -- Definindo sinais de controle:
 
@@ -117,10 +119,12 @@ architecture main of cpu is
                 n : integer := n                                           -- Define a largura de bits do contador
             );
             port (
-                clk    : in  std_logic;
-                MR     : in  std_logic;
-                en     : in  std_logic;
-                count  : out std_logic_vector(n - 1 downto 0)
+                clk      : in  std_logic;
+                MR       : in  std_logic;
+                en       : in  std_logic;
+                load     : in  std_logic;                                  -- Sinal de carregamento (ativo em HIGH)
+                load_val : in  std_logic_vector(n - 1 downto 0);           -- Valor a ser carregado
+                count    : out std_logic_vector(n - 1 downto 0)
             );
         end component generic_counter;
 
@@ -261,6 +265,8 @@ begin
             CLOCK,                                                         -- Atribui o clock interno da CPU
             MR,                                                            -- Sinal de Master-Reset
             WR_PC,                                                         -- Incrementa a contagem do PC
+            PC_load,                                                       -- Utilizado para sobrescrever o PC
+            load_val,                                                      -- Valor a ser carregado (possivelmente de um JMP)
             PC_out                                                         -- Direciona o valor do PC para PC_out
         );
 

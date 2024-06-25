@@ -9,25 +9,27 @@
 -- AUTOR: André Solano F. R. Maiolini
 -- DATA: 23/06/2024
 
---| Libraries |------------------------------------------------------------------------------
+--| Libraries |------------------------------------------------------------------------------------------
 
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
---| Contador |--------------------------------------------------------------------------------
+--| Contador |-------------------------------------------------------------------------------------------
 
 entity generic_counter is
     generic(n : integer := 4); -- quantidade de bits do contador
     port (
-        clk    : in  std_logic;
-        MR     : in  std_logic;
-        en     : in  std_logic;
-        count  : out std_logic_vector(n - 1 downto 0)
+        clk      : in  std_logic;
+        MR       : in  std_logic;
+        en       : in  std_logic;
+        load     : in  std_logic;                           -- Sinal de carregamento (ativo em HIGH)
+        load_val : in  std_logic_vector(n - 1 downto 0);    -- Valor a ser carregado
+        count    : out std_logic_vector(n - 1 downto 0)
     );
 end entity generic_counter;
 
---| Lógica |----------------------------------------------------------------------------------
+--| Lógica |---------------------------------------------------------------------------------------------
 
 architecture main of generic_counter is
 
@@ -35,7 +37,7 @@ architecture main of generic_counter is
 
 begin
 
-    contagem : process(clk, MR) 
+    contagem : process(clk, MR, load) 
     begin
 
         if MR = '0' then
@@ -44,7 +46,15 @@ begin
 
         elsif (falling_edge(clk) and en = '1') then
 
-            count_temp <= count_temp + 1;
+            if load = '1' then
+
+                count_temp <= unsigned(load_val);
+
+            elsif en = '1' then
+
+                count_temp <= count_temp + 1;
+
+            end if;
 
         end if;
 

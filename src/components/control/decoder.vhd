@@ -20,7 +20,7 @@ use ieee.std_logic_1164.all;
 entity decoder is
   
   port (
-    op_code       : in  std_logic_vector(3 downto 0);  -- Lê o código da operação em exec
+    op_code       : in  std_logic_vector(3 downto 0);  -- Lê o código da operação em execução
     clk           : in  std_logic;                     -- Recebe o clock interno da CPU
     ZF            : in  std_logic;                     -- Zero Flag
     GZ            : in  std_logic;                     -- Flag "Greater than Zero"
@@ -33,9 +33,9 @@ entity decoder is
     sel_acc_src_0 : out std_logic;                     -- Seleção do input do ACC (LSB)
     op_ula        : out std_logic;                     -- Seleciona operação da ULA
     WR_IR         : out std_logic;                     -- Sinal de escrita no IR
-    LOAD          : out std_logic;                     -- Sinal de carga para o PC (JMP)
-    read_io       : out std_logic;                     -- Sinal para leitura do dispositivo de I/O
-    write_io      : out std_logic                      -- Sinal para escrita no dispositivo de I/O
+    PC_load          : out std_logic;                  -- Sinal de carga para o PC (JMP)
+    RD_io         : out std_logic;                     -- Sinal para leitura do dispositivo de I/O
+    WR_io         : out std_logic                      -- Sinal para escrita no dispositivo de I/O
   );
 
 end decoder;
@@ -57,11 +57,11 @@ architecture main of decoder is
       n : integer := 2
     );
     port (
-      data_in   : in  std_logic_vector(1 downto 0);   -- Dados de entrada
+      data_in   : in  std_logic_vector(1 downto 0);    -- Dados de entrada
       enable    : in  std_logic;                       -- Sinal de habilitação
       MR        : in  std_logic;                       -- Sinal de master-reset
       CLK       : in  std_logic;                       -- Sinal de clock
-      data_out  : out std_logic_vector(1 downto 0)    -- Dados de saída
+      data_out  : out std_logic_vector(1 downto 0)     -- Dados de saída
     );
   end component register_rising_edge_enable;
 
@@ -108,8 +108,8 @@ begin
   -- WR_IR
   WR_IR <= not(clk);
 
-  -- LOAD
-  LOAD <= '1' when ((op_code = "1000") or ((op_code = "1011") and (ZF_out = '0')) or (op_code = "1100" and (GZ_out = '1')) or (op_code = "1100" and (GZ_out = '0'))) else '0';
+  -- PC_load
+  PC_load <= '1' when ((op_code = "1000") or ((op_code = "1011") and (ZF_out = '0')) or (op_code = "1100" and (GZ_out = '1')) or (op_code = "1100" and (GZ_out = '0'))) else '0';
 
   -- enable_flag
   enable_flag <= ((not(op_code(3)) and op_code(2)) or (((op_code(3) and not(op_code(2))) and op_code(1)) and not(op_code(0))));
@@ -118,11 +118,11 @@ begin
   ZF_out <= flag_out(1);
   GZ_out <= flag_out(0);
 
-  -- read_io
-  read_io <= (((op_code(3) and op_code(2)) and op_code(1)) and not(op_code(0)));
+  -- RD_io
+  RD_io <= (((op_code(3) and op_code(2)) and op_code(1)) and not(op_code(0)));
 
-  -- write_io
-  write_io <= (((op_code(3) and op_code(2)) and op_code(1)) and op_code(0));
+  -- WR_io
+  WR_io <= (((op_code(3) and op_code(2)) and op_code(1)) and op_code(0));
 
 end architecture main;
 

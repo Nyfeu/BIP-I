@@ -1,4 +1,4 @@
--- =============================================================================================================================================
+-- ===============================================================================================================================================
 --
 --          ██████╗ ██╗██████╗       ██╗
 --          ██╔══██╗██║██╔══██╗     ███║           Descrição de Hardware (VHDL)
@@ -7,7 +7,7 @@
 --          ██████╔╝██║██║           ██║           ->> AUTOR: André Solano F. R. Maiolini (19.02012-0)
 --          ╚═════╝ ╚═╝╚═╝           ╚═╝           ->> DATA: 25/06/2024
 --
--- ============+================================================================================================================================
+-- ============+=================================================================================================================================
 --   Descrição |
 -- ------------+
 -- 
@@ -16,7 +16,7 @@
 --  e uma Unidade Lógica e Aritmética (ALU) para operações aritméticas e lógicas. Utliza arquitetura de 
 --  barramentos de Harvard.
 --
--- ===================+==========================================================================================================================
+-- ===================+===========================================================================================================================
 --  Entradas / Saídas |
 -- -------------------+
 --
@@ -31,7 +31,7 @@
 --  out_port_3  : Porte de saída 3 (16 bits);
 --  out_port_4  : Porte de saída 4 (16 bits).
 --
--- =====================+========================================================================================================================
+-- =====================+=========================================================================================================================
 --  Diagrama de Blocos  |
 -- ---------------------+                     Arquitetura de barramentos Harvard                   ____________________________
 --                                                                                                /                           /\
@@ -42,20 +42,20 @@
 --                  +--------+             +-----+          +-----+          +-----+          \___________________________\/
 --                                                                                             \ \ \ \ \ \ \ \ \ \ \ \ \ \ \
 --
--- ==============================================================================================================================================
+-- ===============================================================================================================================================
 --
 
---| Libraries |----------------------------------------------------------------------------------------------------------------------------------
+--| Libraries |===================================================================================================================================
 
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
---| CPU |----------------------------------------------------------------------------------------------------------------------------------------
+--| CPU |=========================================================================================================================================
 
 entity cpu is
 
-    -- Define as portas da CPU - entradas de controle básicas:
+    -- (PORTAS CPU - entradas de controle básicas ) ===========================================================================================
 
     port(
         enable_clk  : in  std_logic;                                       -- Habilita pulsos de clock
@@ -70,20 +70,37 @@ entity cpu is
         out_port_4  : out std_logic_vector(15 downto 0)                    -- Porte de saída 4 (16 bits)
     );
 
+    -- O sinal "enable_clk" é responsável por habilitar o TIMER interno da CPU, dessa forma,
+    -- inicia os pulsos de CLOCK do processador - em outras palavras, começa a execução.
+
+    -- MR (Master-Reset) serve para resetar a contagem do Program Counter (PC), assim como
+    -- resetar os valores armazenados em registradores e afins.
+
+    -- Tem-se também 4 portas para entrada de dados e outras 4 para saída. Dessa forma,
+    -- será feito o endereçamento por meio de 2 bits, num dispositivo dedicado "io_device".
+    -- É delegada a esse dispositivo a responsabilidade de encaminhar para o Acumulador (ACC)
+    -- o valor correto de INPUT, assim como registrar o OUTPUT em sua respectiva porta.
+
 end entity cpu;
 
---| Lógica |--------------------------------------------------------------------------------------------------------------------------------------
+--| Architecture |================================================================================================================================
 
 architecture main of cpu is
 
-    -- Define os valores genéricos que serão fornecidos aos componentes:
+    -- Define os valores genéricos (CONSTANTES) ==================================================================================================
+
+    -- Alguns componentes foram criados usando valores genéricos. Caso necessário, podem ser usadas
+    -- as seguintes constantes para definir os valores específicos necessários.
 
     constant n             : integer := 16;                                -- Tamanho em bits do PC
     constant f             : integer := 2000;                              -- freq. do clock [MHz]
     constant addr_rom      : integer := 16;                                -- Bits de endereçamento da ROM
     constant i_word        : integer := 16;                                -- Tamanho da palavra de instrução
 
-    -- Definindo sinais internos à CPU:
+    -- (SINAIS INTERNOS) =========================================================================================================================
+
+    -- Para que possa ser feita a comunicação adequada entre os diversos componentes que integram
+    -- a CPU, é necessário que sejam definidos sinais internos.
 
     signal CLOCK           : std_logic;                                    -- Clock interno da CPU (recebe o clock do TIMER)
     signal PC_out          : std_logic_vector(n - 1 downto 0);             -- Valor de saída do contador (valor do PC)
@@ -99,16 +116,18 @@ architecture main of cpu is
     signal ALU_in          : std_logic_vector(15 downto 0);                -- Entrada da ALU
     signal OE              : std_logic := '1';                             -- Habilita output da memória (sempre habilitado)
     signal ME              : std_logic := '1';                             -- Habilita memória (sempre habilitado)
-    signal PC_load         : std_logic := '0';                             -- Sinal de carregamento (ativo em HIGH)
     signal load_val        : std_logic_vector(n - 1 downto 0);             -- Valor a ser carregado no PC
     signal ZF_in           : std_logic;                                    -- Zero flag (ZF_in) lida da ALU
     signal GZ_in           : std_logic;                                    -- Greater than Zero flag (GZ_in) lida da ALU
-    signal read_io         : std_logic;
-    signal write_io        : std_logic;
-    signal input_data      : std_logic_vector(15 downto 0);
-    signal io_addr         : std_logic_vector(1 downto 0);
+    signal input_data      : std_logic_vector(15 downto 0);                -- Valor recebido do dispositivo de I/O
+    signal io_addr         : std_logic_vector(1 downto 0);                 -- Endereçamento do porte de I/O
 
-    -- Definindo sinais de controle:
+    -- (CONTROL BUS) =============================================================================================================================
+
+    -- Além dos sinais internos, tem-se os sinais de controle decodificados a partir das instruções
+    -- em execução (de acordo com o valor registrado pelo IR). Esses sinais são responsáveis por
+    -- controlar os diversos componentes. Selecionando entradas e saídas, habilitando operações de escrita
+    -- e leitura, bem como selecionando as operações a serem executadas.
 
     signal SelUlaSrc       : std_logic;                                    -- Sinal de seleção da fonte para a ALU
     signal OP_ULA          : std_logic;                                    -- Sinal de seleção de operação da ALU
@@ -118,38 +137,48 @@ architecture main of cpu is
     signal WR_ACC          : std_logic;                                    -- Sinal de escrita no ACC
     signal SelAccSrc1      : std_logic;                                    -- Seleciona dados para o ACC (MSB)
     signal SelACCSrc0      : std_logic;                                    -- Seleciona dados para o ACC (LSB)
+    signal PC_load         : std_logic := '0';                             -- Sinal de carregamento (ativo em HIGH)
+    signal RD_io           : std_logic;                                    -- Habilita leitura dos portes de INPUT
+    signal WR_io           : std_logic;                                    -- Habilita escrita nos portes de OUTPUT
 
-    -- Definindo os componentes internos da CPU:
+    -- (COMPONENTES INTERNOS) ====================================================================================================================
 
-        -- Temporizador genérico:
+    -- Para que os componentes possam ser utilizados para integrar a CPU, é necessário definí-los,
+    -- de forma que, possa-se criar instâncias de cada componente (uma ou múltiplas vezes).
+
+        -- [TIMER] -------------------------------------------------------------------------------------------------------------------------------
 
         component generic_timer is
             generic(
-                clk_freq : integer := f                                    -- Define a frequência do temporizador
+                clk_freq : integer := f                                    -- Define a frequência do TIMER
             );
             port(
-                clk : out std_logic := '0';
-                enable : in std_logic
+                clk : out std_logic := '0';                                -- Será responsável por fornecer o CLOCK 
+                enable : in std_logic                                      -- Habilita os pulsos do TIMER
             );
         end component generic_timer;
 
-        -- Contador genérico:
+        -- [CONTADOR] ----------------------------------------------------------------------------------------------------------------------------
 
         component generic_counter is
             generic(
                 n : integer := n                                           -- Define a largura de bits do contador
             );
             port (
-                clk      : in  std_logic;
-                MR       : in  std_logic;
-                en       : in  std_logic;
+                clk      : in  std_logic;                                  -- Sincroniza o contador
+                MR       : in  std_logic;                                  -- Master-Reset reinicia a contagem
+                en       : in  std_logic;                                  -- Habilita a contagem
                 load     : in  std_logic;                                  -- Sinal de carregamento (ativo em HIGH)
                 load_val : in  std_logic_vector(n - 1 downto 0);           -- Valor a ser carregado
-                count    : out std_logic_vector(n - 1 downto 0)
+                count    : out std_logic_vector(n - 1 downto 0)            -- Valor atual do contador
             );
         end component generic_counter;
 
-        -- Read Only Memory (memória de programa):
+        -- [MEMÓRIA DE PROGRAMA] -----------------------------------------------------------------------------------------------------------------
+
+        -- Para a aplicação foi adotada uma memória de somente leitura (ROM - Read Only Memória), pois,
+        -- as operações feitas se restringem a leitura. Isso significa que o código gravado na memória, será
+        -- alterado a uma razão muito mais baixa que a taxa de leitura da mesma.
 
         component generic_rom is
             generic (
@@ -163,6 +192,8 @@ architecture main of cpu is
                 data_out : out std_logic_vector(word-1 downto 0)           -- Saída de dados
             );
         end component generic_rom;
+
+        -- [REGISTRADORES] -----------------------------------------------------------------------------------------------------------------------
 
         -- Registrador de 16 bits detector de borda de descida com enable:
 
@@ -187,16 +218,16 @@ architecture main of cpu is
             );
         end component register_falling_edge;
 
-        -- Decodificador de instruções (unidade de controle)
+        -- [DECODIFICADOR DE INSTRUÇÔES (unidade de controle)] ===================================================================================
 
         component decoder is
             port (
-                op_code       : in  std_logic_vector;                      -- Lê o código da operação em exec
+                op_code       : in  std_logic_vector;                      -- Lê o código da operação em execução
                 clk           : in  std_logic;                             -- Recebe o clock interno da CPU
                 ZF            : in  std_logic;                             -- Zero Flag
                 GZ            : in  std_logic;                             -- Flag "Greater than Zero"
-                MR            : in  std_logic;                             -- Master-Reset para o registrador de status       
-                sel_ula_src   : out std_logic;                             -- Seleciona operando para a ULA
+                MR            : in  std_logic;                             -- Master-Reset para o registrador de status  
+                sel_ula_src   : out std_logic;                             -- Seleciona o operando para a ULA
                 WR_RAM        : out std_logic;                             -- Sinal de escrita na RAM
                 WR_PC         : out std_logic;                             -- Sinal de incremento do PC
                 WR_ACC        : out std_logic;                             -- Sinal de escrita no ACC
@@ -204,13 +235,17 @@ architecture main of cpu is
                 sel_acc_src_0 : out std_logic;                             -- Seleção do input do ACC (LSB)
                 op_ula        : out std_logic;                             -- Seleciona operação da ULA
                 WR_IR         : out std_logic;                             -- Sinal de escrita no IR
-                LOAD          : out std_logic;                             -- Sinal de carga para o PC (JMP)
-                read_io       : out std_logic;                             -- Sinal para leitura do dispositivo de I/O
-                write_io      : out std_logic                              -- Sinal para escrita no dispositivo de I/O
+                PC_load          : out std_logic;                          -- Sinal de carga para o PC (JMP)
+                RD_io       : out std_logic;                               -- Sinal para leitura do dispositivo de I/O
+                WR_io      : out std_logic                                 -- Sinal para escrita no dispositivo de I/O
             );
         end component decoder;
 
-        -- Random Access Memory (memória de dados):
+        -- [MEMÓRIA DE DADOS] --------------------------------------------------------------------------------------------------------------------
+
+        -- Random Access Memory: podem ser realizadas tanto operações de leitura quanto escrita,
+        -- além disso, o custo para acessar qualquer célula da memória é constante, independentemente,
+        -- do endereço - por isso o nome: "acesso randômico".
 
         component generic_ram is
             generic(
@@ -226,6 +261,8 @@ architecture main of cpu is
                 data_out: out std_logic_vector(word-1 downto 0)            -- Palavra de saída (word bits)
             ); 
         end component generic_ram;
+
+        -- [MULTIPLEXADORES] ---------------------------------------------------------------------------------------------------------------------
 
         -- MUX 2 selects e 16 bits:
 
@@ -252,7 +289,10 @@ architecture main of cpu is
             );
         end component mux_16bit;
 
-        -- Unidade Lógica e Aritmética (ALU):
+        -- [ALU] ---------------------------------------------------------------------------------------------------------------------------------
+
+        -- Unidade Lógica e Aritmética (ALU): responsável por realizar diferentes operações aritméticas,
+        -- assim como por gerar flags (status) que tornam possíveis os pulos (jumps) condicionais.
 
         component arithmetic_logic_unit is
             port (
@@ -263,6 +303,17 @@ architecture main of cpu is
                 GZ                   : out std_logic                       -- Greater than Zero (flag)
             );
           end component arithmetic_logic_unit;
+
+        -- [I/O DEVICE] --------------------------------------------------------------------------------------------------------------------------
+
+        -- O dispositivo de I/O é responsável por encapsular a lógica de escrita e leitura dos diferentes
+        -- portes da CPU. Esses portes devem ser considerados na "pinagem" da CPU, conforme definido na própria
+        -- entidade. São usados 2 bits de enderaçamento e o tamanho da palavra lida segue o padrão da CPU.
+
+        -- Além disso, esse dispositivo deverá receber o sinal MR (Master-Reset) para que se possa resetar os
+        -- registradores de OUTPUT - necessários para que o sinal seja definido adequadamente.
+
+        -- Também sincroniza os sinais de INPUT através do CLOCK recebido da CPU.
 
         -- Definindo o dispositivo de I/O (interface):
 
@@ -288,7 +339,9 @@ architecture main of cpu is
 
 begin
 
-    -- Instância do relógio interno da CPU: TIMER
+    -- (LIGANDO OS COMPONENTES INTERNOS) =========================================================================================================
+
+    -- Instância do relógio interno da CPU: [TIMER]
 
     TIMER: generic_timer 
         port map(
@@ -296,7 +349,7 @@ begin
             enable_clk                                                     -- Sinal para habilitar o TIMER da CPU
         );
 
-    -- Instância do circuito contador para o Program Counter (PC):
+    -- Instância do circuito contador para o [Program Counter] (PC):
 
     load_val <= EX_SINAL;
 
@@ -310,7 +363,7 @@ begin
             PC_out                                                         -- Direciona o valor do PC para PC_out
         );
 
-    -- Instância da memória de programa: ROM
+    -- Instância da [MEMÓRIA DE PROGRAMA]: ROM
 
     ROM: generic_rom
         port map(
@@ -320,7 +373,7 @@ begin
             ROM_out                                                        -- Obtém instrução a partir do endereço
         );
 
-    -- Instância de um registrador: IR (Instruction Register)
+    -- Instância de um registrador: IR [INSTRUCTION REGISTER]
 
     IR: register_falling_edge
         port map(
@@ -339,25 +392,40 @@ begin
 
     EX_SINAL <= x"0" & OPERAND;                                            -- Extende o sinal para 16 bits - adicionando zeros aos MSBs
 
-    -- Instanciando o decodificador de instruções:
+    -- Instanciando o [DECODIFICADOR DE INSTRUÇÔES]:
 
     DECR: decoder port map(
-        OP_CODE, CLOCK, ZF_in, GZ_in, MR, SelUlaSrc, WR_RAM, WR_PC, WR_ACC, SelAccSrc1, SelAccSrc0, OP_ULA, WR_IR, PC_load, read_io, write_io
-    );
+        OP_CODE,                                                           -- Lê o código da operação em exec
+        CLOCK,                                                             -- Recebe o clock interno da CPU
+        ZF_in,                                                             -- Zero Flag
+        GZ_in,                                                             -- Flag "Greater than Zero"
+        MR,                                                                -- Master-Reset para o registrador de status
+        SelUlaSrc,                                                         -- Seleciona operando para a ULA
+        WR_RAM,                                                            -- Sinal de escrita na RAM
+        WR_PC,                                                             -- Sinal de incremento do PC
+        WR_ACC,                                                            -- Sinal de escrita no ACC
+        SelAccSrc1,                                                        -- Seleção do input do ACC (MSB)
+        SelAccSrc0,                                                        -- Seleção do input do ACC (LSB)
+        OP_ULA,                                                            -- Seleciona operação da ULA
+        WR_IR,                                                             -- Sinal de escrita no IR
+        PC_load,                                                           -- Sinal de carga para o PC (JMP)
+        RD_io,                                                             -- Sinal para leitura do dispositivo de I/O
+        WR_io                                                              -- Sinal para escrita no dispositivo de I/O
+    );                        
 
-    -- Instância da memória de dados: RAM
+    -- Instância da [MEMÓRIA DE DADOS]: RAM
 
     RAM: generic_ram 
         port map(
-            not(WR_RAM),
-            oe,
-            ME,
-            OPERAND,
-            ACC_out,
-            RAM_data
-        );
+            not(WR_RAM),                                                   -- Habilita escrita (ativo em LOW)
+            oe,                                                            -- Habilita output
+            ME,                                                            -- Habilita memória
+            OPERAND,                                                       -- Endereçamento (n bits)
+            ACC_out,                                                       -- Palavra de entrada (word bits)
+            RAM_data                                                       -- Palavra de saída (word bits)
+        );           
 
-    -- Instância de um registrador: ACC (Acumulador)
+    -- Instância de um registrador: [ACC] (Acumulador)
 
     ACC: register_rising_edge_enable
         port map(
@@ -368,7 +436,7 @@ begin
             ACC_out                                                        -- Saída do dado gravado no IR
         );
 
-    -- MUX entrada do ACC (Acumulador):
+    -- [MUX] entrada do ACC (Acumulador):
 
     MUX_ACC: mux_2_16bit 
         port map(
@@ -381,7 +449,7 @@ begin
             ACC_in                                                         -- Dados de saída
         );
 
-    -- MUX entrada da ALU:
+    -- [MUX] entrada da ALU:
 
     MUX_ALU: mux_16bit
         port map(
@@ -391,7 +459,7 @@ begin
             ALU_in                                                         -- Dados de saída
         );
 
-    -- ALU - Unidade Lógica e Aritmética:
+    -- [ALU] - Unidade Lógica e Aritmética:
 
     ALU: arithmetic_logic_unit 
         port map(
@@ -403,7 +471,7 @@ begin
             GZ_in                                                          -- Greater than Zero (GZ_in)
         );
 
-    -- Instanciando dispositivo de I/O:
+    -- Instanciando [DISPOSITIVO DE I/O]:
 
     io_addr <= OPERAND(1 downto 0);
 
@@ -413,8 +481,8 @@ begin
             CLOCK,                                                         -- Clock interno da CPU
             ACC_out,                                                       -- Dados de saída do I/O (output)
             input_data,                                                    -- Dados de entrada do I/O (input)
-            read_io,                                                       -- Habilita leitura do I/O
-            write_io,                                                      -- Habilita escrita do I/O
+            RD_io,                                                         -- Habilita leitura do I/O
+            WR_io,                                                         -- Habilita escrita do I/O
             io_addr,                                                       -- Endereço do I/O
             in_port_1,                                                     -- Porte de entrada 1
             in_port_2,                                                     -- Porte de entrada 2
@@ -428,4 +496,4 @@ begin
 
 end architecture main;
 
---------------------------------------------------------------------------------------------------------------------------------------------------
+-- ===============================================================================================================================================

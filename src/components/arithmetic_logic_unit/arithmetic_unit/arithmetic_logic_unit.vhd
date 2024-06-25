@@ -1,9 +1,9 @@
--- Descrição de Hardware (VHDL) de uma Unidade Lógica e Aritmética (16 bits)
+-- Descrição de Hardware (VHDL) de uma Unidade Aritmética (16 bits)
 --
---                  __________
---    data_in_1 >--|          |
---    data_in_2 >--|   ALU    |--> data_out 
---       op_ula >--|__________|
+--                  _________
+--    data_in_1 >--|         |
+--    data_in_2 >--|   AU    |--> data_out 
+--       op_ula >--|_________|
 --
 --
 -- AUTOR: André Solano F. R. Maiolini
@@ -14,19 +14,19 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
---| ALU |------------------------------------------------------------------------------------
+--| AU |-------------------------------------------------------------------------------------
 
-entity arithmetic_logic_unit is
+entity arithmetic_unit is
     port (
         data_in_1, data_in_2   : in  std_logic_vector(15 downto 0);  -- Dados de entrada
         op_ula                 : in  std_logic;                      -- Sinal de operação
         data_out               : out std_logic_vector(15 downto 0)   -- Dados de saída
     );
-end entity arithmetic_logic_unit;
+end entity arithmetic_unit;
 
 --| Lógica |----------------------------------------------------------------------------------
 
-architecture main of arithmetic_logic_unit is
+architecture main of arithmetic_unit is
 
     -- Sinais intermediários que entrarão no MUX
     signal sum : std_logic_vector(15 downto 0);

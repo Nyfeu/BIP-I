@@ -1,4 +1,18 @@
--- Descrição de Hardware (VHDL) de uma Random Access Memory (RAM)
+-- =======================================================================================================
+--
+--  Descrição de Hardware (VHDL) de uma Random Access Memory (RAM) - "Memória de Dados"
+--
+--  ->> AUTOR: André Solano F. R. Maiolini
+--  ->> DATA: 23/06/2024
+--   
+--   ██████╗  █████╗ ███╗   ███╗
+--   ██╔══██╗██╔══██╗████╗ ████║
+--   ██████╔╝███████║██╔████╔██║
+--   ██╔══██╗██╔══██║██║╚██╔╝██║
+--   ██║  ██║██║  ██║██║ ╚═╝ ██║
+--   ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝
+-- 
+--  ->> Diagrama de bloco (entradas e saídas) ============================================================
 --
 --                    _________
 --        data_in >--|         |
@@ -6,14 +20,9 @@
 --             ME >--|         |
 --             OE >--|         |
 --             WE >--|_________|
---                
--- 
--- Requisitos
--- > Random Access Memory: acesso a qualquer posição diretamente da memória
--- > Read/Write Memory: qualquer célula da memória pode ser lida e/ou escrita
 --
--- AUTOR: André Solano F. R. Maiolini
--- DATA: 23/06/2024
+--
+-- =======================================================================================================
 
 --| Libraries |-----------------------------------------------------------------------------------
 
@@ -80,3 +89,5 @@ begin
     end process;
 
 end architecture main;
+
+-- =======================================================================================================

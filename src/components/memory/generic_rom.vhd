@@ -1,24 +1,34 @@
--- Descrição de Hardware (VHDL) de uma Read Only Memory (ROM)
+
+-- =======================================================================================================
+--
+--  Descrição de Hardware (VHDL) de uma Read Only Memory (ROM) - "Memória de Programa"
+--
+--  ->> AUTOR: André Solano F. R. Maiolini
+--  ->> DATA: 23/06/2024
+--
+--   ██████╗  ██████╗ ███╗   ███╗
+--   ██╔══██╗██╔═══██╗████╗ ████║
+--   ██████╔╝██║   ██║██╔████╔██║
+--   ██╔══██╗██║   ██║██║╚██╔╝██║
+--   ██║  ██║╚██████╔╝██║ ╚═╝ ██║
+--   ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝
+--
+--  ->> Diagrama de bloco (entradas e saídas) ============================================================
 --
 --                    _________
 --           addr >--|         |--> data_out
 --       CS (LOW) >--|   ROM   |
 --       OE (LOW) >--|_________|
 --                
--- 
--- Requisitos
--- > Read Only Memory: somente leitura.
---
--- AUTOR: André Solano F. R. Maiolini
--- DATA: 23/06/2024
+-- =======================================================================================================
 
---| Libraries |-----------------------------------------------------------------------------------
+--| Libraries |-------------------------------------------------------------------------------------------
 
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
---| ROM |-----------------------------------------------------------------------------------------
+--| ROM |-------------------------------------------------------------------------------------------------
 
 entity generic_rom is
 
@@ -36,9 +46,14 @@ entity generic_rom is
     
 end entity generic_rom;
 
---| Lógica |--------------------------------------------------------------------------------------
+--| Lógica |----------------------------------------------------------------------------------------------
 
 architecture main of generic_rom is
+
+    -- (PROGRAMAS DE TESTE) ------------------------------------------------------------------------------
+
+    -- Nesta seção estão os programas de teste para as funcionalidades e operações do BIP-1.
+    -- Para selecionar um deles, basta comentar o anterior e remover os comentários do desejado.
 
     type memory_type is array (0 to 2**n - 1) of std_logic_vector(word-1 downto 0);
 
@@ -121,3 +136,5 @@ begin
     end process;
 
 end architecture main;
+
+-- =======================================================================================================

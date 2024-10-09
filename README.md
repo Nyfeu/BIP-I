@@ -72,9 +72,6 @@ To run the tests and view the results, you'll need the following tools installed
 
 ### Inputs and Outputs
 
-
-### Inputs and Outputs
-
 ```
 
 - enable_clk : Enables clock pulses;

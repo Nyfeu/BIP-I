@@ -10,7 +10,7 @@ WAVEFORM = $(OUTPUT_DIR)/$(TESTBENCH).vcd
 # Define the commands to be used
 GHDL = ghdl
 GTKWAVE = gtkwave
-RM = del
+RM = rm
 
 # Run a testbench
 $(WAVEFORM): $(VHDL_FILES) $(VHDL_CPU) $(TESTBENCH_FILE)

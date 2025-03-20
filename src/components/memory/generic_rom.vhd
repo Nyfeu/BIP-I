@@ -79,20 +79,25 @@ architecture main of generic_rom is
     -- Teste: "Sequência de Fibonacci"
 
     constant memory : memory_type := (
-        0 => x"E000",
-        1 => x"1000",
-        2 => x"F003",
-        3 => x"E001",
-        4 => x"1001",
-        5 => x"F003",
-        6 => x"9000",
-        7 => x"4000",
-        8 => x"1000",
-        9 => x"F003",
-        10 => x"4001",
-        11 => x"1001",
-        12 => x"F003",
-        13 => x"8005",
+        0 => x"3005",  -- ACC <- 5
+        1 => x"1014",  -- Mem[20] <- ACC
+        2 => x"F000",  -- OUT1 <- ACC
+        3 => x"300A",  -- ACC <- 10
+        4 => x"100A",  -- Mem[10] <- ACC
+        5 => x"F000",  -- OUT1 <- ACC
+        6 => x"A014",  -- CMP ACC (10) com Mem[20] (5)
+        7 => x"C00D",  -- JL, se ACC (10) > Mem[20] (5)
+        8 => x"D010",  -- JG, se ACC < Mem[20]
+        9 => x"0000", -- HALT (caso os saltos falhem)
+        10 => x"3001", -- ACC <- 1 (indique que JNE funcionou)
+        11 => x"F000", -- OUT1 <- ACC (1) - (DEVE INDICAR 1)
+        12 => x"8012", -- Salta para final do programa (18 = 0x12)
+        13 => x"3002", -- ACC <- 2 (indica que JL funcionou)
+        14 => x"F000", -- OUT1 <- ACC (2) 
+        15 => x"8012", -- Salta para final do programa (18 = 0x12)
+        16 => x"3003", -- ACC <- 3 (indica que JG funcionou)
+        17 => x"F000", -- OUT1 <- ACC (3)
+        18 => x"0000", -- HALT (fim do programa)
         others => x"0000"
     );
 

@@ -184,7 +184,7 @@ begin
     PC_load <= '1' when 
                    (op_code = "1000") or                                          -- JUMP (Incondicional)
                    ((op_code = "1011") and (ZF_out = '0')) or                     -- JNE (Jump if Not Equal)
-                   ((op_code = "1100") and (GZ_out = '1')) or                     -- JL (Jump if Lesser)
+                   ((op_code = "1100") and (GZ_out = '1') and (ZF_out = '0')) or                     -- JL (Jump if Lesser)
                    ((op_code = "1101") and (GZ_out = '0') and (ZF_out = '0'))     -- JG (Jump if Greater)
                    else '0';
          
